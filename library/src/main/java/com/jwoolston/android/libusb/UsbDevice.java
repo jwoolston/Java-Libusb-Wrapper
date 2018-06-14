@@ -23,6 +23,8 @@ import android.support.annotation.Nullable;
 
 import com.jwoolston.android.libusb.util.Preconditions;
 
+import java.nio.ByteBuffer;
+
 /**
  * This class represents a USB device attached to the android device with the android device
  * acting as the USB host.
@@ -43,14 +45,10 @@ import com.jwoolston.android.libusb.util.Preconditions;
  */
 public class UsbDevice implements Parcelable {
 
-    static {
-        System.loadLibrary("usb-runtime");
-    }
-
     private static final String TAG = "UsbDevice";
     private static final boolean DEBUG = false;
 
-    @NonNull
+    /*@NonNull
     private final String mName;
     @Nullable
     private final String mManufacturerName;
@@ -64,7 +62,7 @@ public class UsbDevice implements Parcelable {
     private final int mProductId;
     private final int mClass;
     private final int mSubclass;
-    private final int mProtocol;
+    private final int mProtocol;*/
 
     /** All configurations for this device, only null during creation */
     @Nullable
@@ -73,12 +71,23 @@ public class UsbDevice implements Parcelable {
     @Nullable
     private UsbInterface[] mInterfaces;
 
+    @Nullable
+    private static native ByteBuffer wrapDevice(@NonNull ByteBuffer libUsbContext, int fd);
+
+    static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, int fd) {
+        return new UsbDevice(wrapDevice(context.getBuffer(), fd));
+    }
+
+    private UsbDevice(ByteBuffer buffer) {
+
+    }
+
     /**
      * UsbDevice should only be instantiated by UsbService implementation
      *
      * @hide
      */
-    public UsbDevice(@NonNull String name, int vendorId, int productId, int Class, int subClass,
+    /*public UsbDevice(@NonNull String name, int vendorId, int productId, int Class, int subClass,
                      int protocol, @Nullable String manufacturerName, @Nullable String productName,
                      @NonNull String version, @Nullable String serialNumber) {
         mName = Preconditions.checkNotNull(name);
@@ -91,7 +100,7 @@ public class UsbDevice implements Parcelable {
         mProductName = productName;
         mVersion = Preconditions.checkStringNotEmpty(version);
         mSerialNumber = serialNumber;
-    }
+    }*/
 
     /**
      * Returns the name of the device.
