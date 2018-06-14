@@ -16,6 +16,7 @@
 package com.jwoolston.android.libusb;
 
 import android.content.Context;
+import android.hardware.usb.UsbDeviceConnection;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -53,14 +54,18 @@ public class UsbManager {
     }
 
     @NonNull
-    public UsbDevice registerDevice(@NonNull android.hardware.usb.UsbDevice device) {
+    public UsbDevice registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws IllegalAccessException {
         final String key = device.getDeviceName();
         if (localDeviceCache.contains(key)) {
             // We have already dealt with this device, do nothing
             return localDeviceCache.get(key);
         } else {
-            //TODO: Actual file descriptor
-            return UsbDevice.fromAndroidDevice(libUsbContext, 0);
+            UsbDeviceConnection connection = androidUsbManager.openDevice(device);
+            if (connection == null) {
+                // TODO: Replace with custom exception
+                throw new IllegalAccessException("Failed to open device: " + device);
+            }
+            return UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
         }
     }
 

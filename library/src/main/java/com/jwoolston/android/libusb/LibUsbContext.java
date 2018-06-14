@@ -11,15 +11,15 @@ import java.nio.ByteBuffer;
  */
 public class LibUsbContext {
 
-    private final ByteBuffer buffer;
+    private final ByteBuffer nativeObject;
 
-    LibUsbContext(ByteBuffer buffer) {
-        Preconditions.checkNotNull(buffer, "LibUSB Initialization failed.");
-        this.buffer = buffer;
+    LibUsbContext(ByteBuffer nativeObject) {
+        Preconditions.checkNotNull(nativeObject, "LibUSB Initialization failed.");
+        this.nativeObject = nativeObject;
     }
 
     @NonNull
-    ByteBuffer getBuffer() {
-        return buffer;
+    ByteBuffer getNativeObject() {
+        return nativeObject;
     }
 }

@@ -1,6 +1,7 @@
 
 #include <jni.h>
 #include <libusb.h>
+#include <libusbi.h>
 
 #include "logging.h"
 
@@ -15,7 +16,7 @@ Java_com_jwoolston_android_libusb_UsbManager_initialize(JNIEnv *env, jobject ins
         LOGE("Initialization returned: %i", r);
         return NULL;
     } else {
-        jobject buffer = (*env)->NewDirectByteBuffer(env, (void *) ctx, sizeof(libusb_context));
+        jobject buffer = (*env)->NewDirectByteBuffer(env, (void *) ctx, sizeof(struct libusb_context));
         return buffer;
     }
 }

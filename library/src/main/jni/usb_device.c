@@ -4,6 +4,7 @@
 
 #include <jni.h>
 #include <libusb.h>
+#include <libusbi.h>
 
 #include "logging.h"
 
@@ -30,20 +31,77 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceName(JNIEnv *env, jcl
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type, jobject libUsbContext, jint fd) {
+Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type, jobject context, jint fd) {
     LOGD("Wrapping USB Device Handle.");
-    struct libusb_device_handle *dev_handle;
+    struct libusb_device_handle *deviceHandle;
 
-    libusb_context *ctx = (libusb_context *) (*env)->GetDirectBufferAddress(env, buffer);
-    libusb_wrap_fd(ctx, fd, &dev_handle);
+    struct libusb_context *ctx = (libusb_context *) (*env)->GetDirectBufferAddress(env, context);
+    libusb_wrap_fd(ctx, fd, &deviceHandle);
 
-    if (dev_handle == NULL) {
+    if (deviceHandle == NULL) {
         LOGE("Failed to wrap usb device file descriptor.");
         return NULL;
     }
 
     // Claim the control interface
-    libusb_claim_interface(dev_handle, 0);
+    libusb_claim_interface(deviceHandle, 0);
 
-    return ((*env)->NewDirectByteBuffer(env, (void *) dev_handle, sizeof(struct libusb_device_handle)));
+    return ((*env)->NewDirectByteBuffer(env, (void *) deviceHandle, sizeof(struct libusb_device_handle)));
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetManufacturerString(JNIEnv *env, jobject instance, jobject device,
+                                                                        jobject descriptor) {
+    struct libusb_device_handle *deviceHandle = (libusb_device_handle *) (*env)->GetDirectBufferAddress(env, device);
+    struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
+            (*env)->GetDirectBufferAddress(env, descriptor);
+
+    size_t length = 50 * sizeof(unsigned char);
+    unsigned char *name = malloc(length);
+    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iManufacturer, name, length);
+    jstring retval = (*env)->NewStringUTF(env, (const char *) name);
+    free(name);
+    return retval;
+}
+
+
+JNIEXPORT jstring JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetProductNameString(JNIEnv *env, jobject instance, jobject device,
+                                                                       jobject descriptor) {
+    struct libusb_device_handle *deviceHandle = (libusb_device_handle *) (*env)->GetDirectBufferAddress(env, device);
+    struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
+            (*env)->GetDirectBufferAddress(env, descriptor);
+
+    size_t length = 50 * sizeof(unsigned char);
+    unsigned char *name = malloc(length);
+    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iProduct, name, length);
+    jstring retval = (*env)->NewStringUTF(env, (const char *) name);
+    free(name);
+    return retval;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, jobject instance, jobject device,
+                                                                   jobject descriptor) {
+    struct libusb_device_handle *deviceHandle = (libusb_device_handle *) (*env)->GetDirectBufferAddress(env, device);
+    struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
+            (*env)->GetDirectBufferAddress(env, descriptor);
+    uint16_t bcdDevice = deviceDescriptor->bcdDevice;
+    size_t length = 4 * sizeof(unsigned char);
+    unsigned char *version = malloc(length);
+    snprintf(version, length, "%i.%i", 0xFF & (bcdDevice >> 8), 0xFF & bcdDevice);
+    jstring retval = (*env)->NewStringUTF(env, (const char *) version);
+    free(version);
+    return retval;
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_jwoolston_android_libusb_LibUsbDeviceDescriptor_nativeGetDeviceDescriptor(JNIEnv *env, jclass type,
+                                                                                   jobject device) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *)
+            (*env)->GetDirectBufferAddress(env, device);
+
+    struct libusb_device_descriptor *descriptor;
+    libusb_get_device_descriptor(deviceHandle->dev, descriptor);
+    return ((*env)->NewDirectByteBuffer(env, (void *) descriptor, sizeof(struct libusb_device_descriptor)));
 }
