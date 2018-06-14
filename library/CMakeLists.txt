@@ -10,14 +10,39 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
-add_library( # Sets the name of the library.
-             wrapper_libusb
+include_directories(
+    libusb/android
+    libusb/libusb
+    libusb/libusb/os)
 
-             # Sets the library as a shared library.
-             SHARED
+# Defines the source code for the library
+set(libusb_SRCS
+    libusb/libusb/core.c
+    libusb/libusb/descriptor.c
+    libusb/libusb/hotplug.c
+    libusb/libusb/io.c
+    libusb/libusb/sync.c
+    libusb/libusb/strerror.c
+    libusb/libusb/os/linux_usbfs.c
+    libusb/libusb/os/poll_posix.c
+    libusb/libusb/os/threads_posix.c
+    libusb/libusb/os/linux_netlink.c
+)
 
-             # Provides a relative path to your source file(s).
-             src/main/jni/usb_device.c )
+add_library(
+    # Sets the name of the library.
+    wrapper_libusb
+
+    # Sets the library as a shared library.
+    SHARED
+
+    # Provides a relative path to your source file(s).
+    src/main/jni/usb_device.c
+    src/main/jni/logging.h
+    ${libusb_SRCS}
+)
+
+#set_target_properties(wrapper_libusb PROPERTIES LINKER_LANGUAGE C)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
