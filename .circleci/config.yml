@@ -33,7 +33,7 @@ jobs:
       - run:
           name: Code Coverage
           command: |
-            bash <(curl -s https://codecov.io/bash)
+            bash <(wget -q https://codecov.io/bash)
 
 workflows:
   version: 2
