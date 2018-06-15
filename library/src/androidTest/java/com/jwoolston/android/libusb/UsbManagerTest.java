@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.filters.LargeTest;
 import android.support.test.filters.RequiresDevice;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
@@ -29,6 +30,7 @@ import org.junit.runners.MethodSorters;
  */
 @RequiresDevice
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@LargeTest
 @RunWith(AndroidJUnit4.class)
 public class UsbManagerTest extends USBTestCase {
 
