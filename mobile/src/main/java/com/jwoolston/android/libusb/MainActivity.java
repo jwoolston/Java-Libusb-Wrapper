@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -37,8 +38,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override protected void onResume() {
-        super.onResume();
+    @Override protected void onStart() {
+        super.onStart();
+        request();
+    }
+
+    private void request() {
         UsbManager mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -67,6 +72,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                     } else {
                         Log.d(TAG, "permission denied for device " + device);
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override public void run() {
+                                request();
+                            }
+                        }, 2000);
                     }
                 }
             }

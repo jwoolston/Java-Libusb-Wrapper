@@ -19,7 +19,7 @@ import android.content.Context;
 import android.hardware.usb.UsbDeviceConnection;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
+import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,11 +41,13 @@ public class UsbManager {
 
     private final Context context;
     private final android.hardware.usb.UsbManager androidUsbManager;
-    private final ConcurrentHashMap<String, UsbDevice> localDeviceCache = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, UsbDevice> localDeviceCache = new ConcurrentHashMap<>();
     private final LibUsbContext libUsbContext;
 
     @Nullable
     private native ByteBuffer initialize();
+
+    private native void nativeDestroy(@NonNull ByteBuffer context);
 
     public UsbManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -53,11 +55,18 @@ public class UsbManager {
         libUsbContext = new LibUsbContext(initialize());
     }
 
+    public void destroy() {
+        if (libUsbContext != null) {
+            nativeDestroy(libUsbContext.getNativeObject());
+        }
+    }
+
     @NonNull
     public UsbDevice registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws IllegalAccessException {
         final String key = device.getDeviceName();
-        if (localDeviceCache.contains(key)) {
+        if (localDeviceCache.containsKey(key)) {
             // We have already dealt with this device, do nothing
+            Log.d(TAG, "returning cached device.");
             return localDeviceCache.get(key);
         } else {
             UsbDeviceConnection connection = androidUsbManager.openDevice(device);
@@ -65,7 +74,9 @@ public class UsbManager {
                 // TODO: Replace with custom exception
                 throw new IllegalAccessException("Failed to open device: " + device);
             }
-            return UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
+            final UsbDevice usbDevice = UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
+            localDeviceCache.put(key, usbDevice);
+            return usbDevice;
         }
     }
 

@@ -110,6 +110,11 @@ public class UsbDevice {
         mSerialNumber = connection.getSerial();
     }
 
+    @NonNull
+    ByteBuffer getNativeObject() {
+        return nativeObject;
+    }
+
     /**
      * Returns the name of the device.
      * In the standard implementation, this is the path of the device file
@@ -316,9 +321,11 @@ public class UsbDevice {
             ",mClass=" + mClass + ",mSubclass=" + mSubclass + ",mProtocol=" + mProtocol +
             ",mManufacturerName=" + mManufacturerName + ",mProductName=" + mProductName +
             ",mVersion=" + mVersion + ",mSerialNumber=" + mSerialNumber + ",mConfigurations=[");
-        for (int i = 0; i < mConfigurations.length; i++) {
-            builder.append("\n");
-            builder.append(mConfigurations[i].toString());
+        if (mConfigurations != null) {
+            for (int i = 0; i < mConfigurations.length; i++) {
+                builder.append("\n");
+                builder.append(mConfigurations[i].toString());
+            }
         }
         builder.append("]");
         return builder.toString();

@@ -2,33 +2,9 @@
 // Created by Jared Woolston (Jared.Woolston@gmail.com)
 //
 
-#include <jni.h>
-#include <libusb.h>
-#include <libusbi.h>
-
-#include "logging.h"
+#include "common.h"
 
 #define  LOG_TAG    "UsbDevice-Native"
-
-JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceId(JNIEnv *env, jclass type, jstring name_) {
-    const char *name = (*env)->GetStringUTFChars(env, name_, 0);
-
-    // TODO
-
-    (*env)->ReleaseStringUTFChars(env, name_, name);
-
-    return 0;
-}
-
-JNIEXPORT jstring JNICALL
-Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceName(JNIEnv *env, jclass type, jint id) {
-
-    char *returnValue = "retval";
-
-
-    return (*env)->NewStringUTF(env, returnValue);
-}
 
 JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type, jobject context, jint fd) {
@@ -93,15 +69,4 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, 
     jstring retval = (*env)->NewStringUTF(env, (const char *) version);
     free(version);
     return retval;
-}
-
-JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_LibUsbDeviceDescriptor_nativeGetDeviceDescriptor(JNIEnv *env, jclass type,
-                                                                                   jobject device) {
-    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *)
-            (*env)->GetDirectBufferAddress(env, device);
-
-    struct libusb_device_descriptor *descriptor;
-    libusb_get_device_descriptor(deviceHandle->dev, descriptor);
-    return ((*env)->NewDirectByteBuffer(env, (void *) descriptor, sizeof(struct libusb_device_descriptor)));
 }

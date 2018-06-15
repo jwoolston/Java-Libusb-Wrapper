@@ -1,9 +1,8 @@
+//
+// Created by Jared Woolston (Jared.Woolston@gmail.com)
+//
 
-#include <jni.h>
-#include <libusb.h>
-#include <libusbi.h>
-
-#include "logging.h"
+#include "common.h"
 
 #define  LOG_TAG    "UsbManager-Native"
 
@@ -19,5 +18,12 @@ Java_com_jwoolston_android_libusb_UsbManager_initialize(JNIEnv *env, jobject ins
         jobject buffer = (*env)->NewDirectByteBuffer(env, (void *) ctx, sizeof(struct libusb_context));
         return buffer;
     }
+}
+
+JNIEXPORT void JNICALL
+Java_com_jwoolston_android_libusb_UsbManager_nativeDestroy(JNIEnv *env, jobject instance, jobject context) {
+    LOGD("De-initializing libusb.");
+    struct libusb_context *ctx = (libusb_context *) (*env)->GetDirectBufferAddress(env, context);
+    libusb_exit(ctx);
 }
 

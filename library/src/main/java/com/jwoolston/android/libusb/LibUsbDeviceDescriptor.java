@@ -12,13 +12,17 @@ public class LibUsbDeviceDescriptor {
 
     private final ByteBuffer nativeObject;
 
+    private boolean isValid = true;
+
     @NonNull
     static LibUsbDeviceDescriptor getDeviceDescriptor(@NonNull UsbDevice device) {
-        return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptor(device));
+        return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptor(device.getNativeObject()));
     }
 
     @Nullable
-    private static native ByteBuffer nativeGetDeviceDescriptor(@NonNull UsbDevice device);
+    private static native ByteBuffer nativeGetDeviceDescriptor(@NonNull ByteBuffer device);
+
+    private static native void nativeDestroy(@NonNull ByteBuffer descriptor);
 
     private LibUsbDeviceDescriptor(ByteBuffer nativeObject) {
         Preconditions.checkNotNull(nativeObject, "LibUsbDeviceDescriptor Initialization failed.");
@@ -27,6 +31,23 @@ public class LibUsbDeviceDescriptor {
 
     @NonNull
     ByteBuffer getNativeObject() {
-        return nativeObject;
+        if (isValid) {
+            return nativeObject;
+        } else {
+            throw new IllegalStateException("Descriptor is no longer valid.");
+        }
+    }
+
+    public void destroy() {
+        nativeDestroy(nativeObject);
+        isValid = false;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (isValid) {
+            destroy();
+        }
+        super.finalize();
     }
 }
