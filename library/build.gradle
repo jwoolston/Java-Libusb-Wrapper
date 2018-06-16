@@ -65,6 +65,11 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+
         externalNativeBuild {
             cmake {
                 cppFlags ""
@@ -84,7 +89,7 @@ android {
     }
 
     testOptions {
-        //execution 'ANDROID_TEST_ORCHESTRATOR'
+        execution 'ANDROID_TEST_ORCHESTRATOR'
         animationsDisabled true
 
         /*unitTests {
@@ -111,6 +116,7 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
 
+    androidTestUtil 'com.android.support.test:orchestrator:1.0.1'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test:rules:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

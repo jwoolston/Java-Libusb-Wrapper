@@ -15,144 +15,133 @@
  */
 package com.jwoolston.android.libusb;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
-import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.jwoolston.android.libusb.util.Preconditions;
 
-import java.io.FileDescriptor;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeoutException;
 
 /**
- * This class is used for sending and receiving data and control messages to a USB device.
- * Instances of this class are created by {@link UsbManager#openDevice}.
+ * This class is used for sending and receiving data and control messages to a USB device. nstances of this class are
+ * created by {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)}.
  */
 public class UsbDeviceConnection {
 
     private static final String TAG = "UsbDeviceConnection";
 
-    private final UsbDevice mDevice;
+    private final UsbManager manager;
+    private final UsbDevice  device;
 
-    private Context mContext;
-    // used by the JNI code
-    private long mNativeContext;
+    private Context context;
+
+    @NonNull
+    static UsbDeviceConnection fromAndroidConnection(@NonNull Context context, @NonNull UsbManager manager,
+                                                     @NonNull UsbDevice device) {
+        return new UsbDeviceConnection(context, manager, device);
+    }
 
     /**
      * UsbDevice should only be instantiated by UsbService implementation
-     *
-     * @hide
      */
-    public UsbDeviceConnection(UsbDevice device) {
-        mDevice = device;
-    }
-
-    /* package */ boolean open(String name, ParcelFileDescriptor pfd, @NonNull Context context) {
-        mContext = context.getApplicationContext();
-        boolean wasOpened = native_open(name, pfd.getFileDescriptor());
-        return wasOpened;
+    private UsbDeviceConnection(@NonNull Context context, @NonNull UsbManager manager, @NonNull UsbDevice device) {
+        this.context = context;
+        this.manager = manager;
+        this.device = device;
     }
 
     /**
      * @return The application context the connection was created for.
-     * @hide
      */
     @Nullable
     public Context getContext() {
-        return mContext;
+        return context;
     }
 
     /**
-     * Releases all system resources related to the device.
-     * Once the object is closed it cannot be used again.
-     * The client must call {@link UsbManager#openDevice} again
-     * to retrieve a new instance to reestablish communication with the device.
+     * Releases all system resources related to the device. Once the object is closed it cannot be used again. The
+     * client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again to retrieve a new
+     * instance to reestablish communication with the device.
      */
     public void close() {
-        if (mNativeContext != 0) {
-            native_close();
-        }
+        nativeClose(device.getNativeObject());
+        manager.unregisterDevice(device);
     }
 
     /**
-     * Returns the native file descriptor for the device, or
-     * -1 if the device is not opened.
-     * This is intended for passing to native code to access the device.
+     * Returns the native file descriptor for the device, or -1 if the device is not opened. This is intended for
+     * passing to native code to access the device.
      *
      * @return the native file descriptor
      */
     public int getFileDescriptor() {
-        return native_get_fd();
+        return device.getFileDescriptor();
     }
 
     /**
-     * Returns the raw USB descriptors for the device.
-     * This can be used to access descriptors not supported directly
+     * Returns the raw USB descriptors for the device. This can be used to access descriptors not supported directly
      * via the higher level APIs.
      *
      * @return raw USB descriptors
      */
+    @Nullable
     public byte[] getRawDescriptors() {
-        return native_get_desc();
+        return nativeGetRawDescriptor(device.getFileDescriptor());
     }
 
     /**
-     * Claims exclusive access to a {@link android.hardware.usb.UsbInterface}.
-     * This must be done before sending or receiving data on any
-     * {@link android.hardware.usb.UsbEndpoint}s belonging to the interface.
+     * Claims exclusive access to a {@link UsbInterface}. This must be done before sending or receiving data on any
+     * {@link UsbEndpoint}s belonging to the interface.
      *
      * @param intf  the interface to claim
      * @param force true to disconnect kernel driver if necessary
      *
-     * @return true if the interface was successfully claimed
+     * @return {@link LibusbError} The libusb result.
      */
-    public boolean claimInterface(UsbInterface intf, boolean force) {
-        return native_claim_interface(intf.getId(), force);
+    public LibusbError claimInterface(UsbInterface intf, boolean force) {
+        return LibusbError.fromNative(nativeClaimInterface(device.getNativeObject(), intf.getId(), force));
     }
 
     /**
-     * Releases exclusive access to a {@link android.hardware.usb.UsbInterface}.
+     * Releases exclusive access to a {@link UsbInterface}.
      *
-     * @return true if the interface was successfully released
+     * @return {@link LibusbError} The libusb result.
      */
-    public boolean releaseInterface(UsbInterface intf) {
-        return native_release_interface(intf.getId());
+    public LibusbError releaseInterface(UsbInterface intf) {
+        return LibusbError.fromNative(nativeReleaseInterface(device.getNativeObject(), intf.getId()));
     }
 
     /**
-     * Sets the current {@link android.hardware.usb.UsbInterface}.
-     * Used to select between two interfaces with the same ID but different alternate setting.
+     * Sets the current {@link UsbInterface}. Used to select between two interfaces with the same ID but different
+     * alternate setting.
      *
-     * @return true if the interface was successfully selected
+     * @return {@link LibusbError} The libusb result.
      */
-    public boolean setInterface(UsbInterface intf) {
-        return native_set_interface(intf.getId(), intf.getAlternateSetting());
+    public LibusbError setInterface(UsbInterface intf) {
+        return LibusbError.fromNative(nativeSetInterface(device.getNativeObject(), intf.getId(),
+                                                         intf.getAlternateSetting()));
     }
 
     /**
-     * Sets the device's current {@link android.hardware.usb.UsbConfiguration}.
+     * Sets the device's current {@link UsbConfiguration}.
      *
-     * @return true if the configuration was successfully set
+     * @return {@link LibusbError} The libusb result.
      */
-    public boolean setConfiguration(UsbConfiguration configuration) {
-        return native_set_configuration(configuration.getId());
+    public LibusbError setConfiguration(UsbConfiguration configuration) {
+        return LibusbError.fromNative(nativeSetConfiguration(device.getNativeObject(), configuration.getId()));
     }
 
     /**
-     * Performs a control transaction on endpoint zero for this device.
-     * The direction of the transfer is determined by the request type.
-     * If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
-     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write,
-     * and if it is {@link UsbConstants#USB_DIR_IN}, then the transfer
-     * is a read.
+     * Performs a control transaction on endpoint zero for this device. The direction of the transfer is determined
+     * by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
+     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
+     * then the transfer is a read.
      * <p>
-     * This method transfers data starting from index 0 in the buffer.
-     * To specify a different offset, use
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
      * {@link #controlTransfer(int, int, int, int, byte[], int, int, int)}.
      * </p>
      *
@@ -165,21 +154,18 @@ public class UsbDeviceConnection {
      * @param length      the length of the data to send or receive
      * @param timeout     in milliseconds
      *
-     * @return length of data transferred (or zero) for success,
-     * or negative value for failure
+     * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int controlTransfer(int requestType, int request, int value,
-                               int index, byte[] buffer, int length, int timeout) {
+    public int controlTransfer(int requestType, int request, int value, int index, byte[] buffer, int length,
+                               int timeout) {
         return controlTransfer(requestType, request, value, index, buffer, 0, length, timeout);
     }
 
     /**
-     * Performs a control transaction on endpoint zero for this device.
-     * The direction of the transfer is determined by the request type.
-     * If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
-     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write,
-     * and if it is {@link UsbConstants#USB_DIR_IN}, then the transfer
-     * is a read.
+     * Performs a control transaction on endpoint zero for this device. The direction of the transfer is determined
+     * by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
+     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
+     * then the transfer is a read.
      *
      * @param requestType request type for this transaction
      * @param request     request ID for this transaction
@@ -191,22 +177,20 @@ public class UsbDeviceConnection {
      * @param length      the length of the data to send or receive
      * @param timeout     in milliseconds
      *
-     * @return length of data transferred (or zero) for success,
-     * or negative value for failure
+     * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int controlTransfer(int requestType, int request, int value, int index,
-                               byte[] buffer, int offset, int length, int timeout) {
+    public int controlTransfer(int requestType, int request, int value, int index, byte[] buffer, int offset,
+                               int length, int timeout) {
         checkBounds(buffer, offset, length);
-        return native_control_request(requestType, request, value, index,
-            buffer, offset, length, timeout);
+        return nativeControlRequest(device.getNativeObject(), requestType, request, value, index, buffer, offset,
+                                    length, timeout);
     }
 
     /**
-     * Performs a bulk transaction on the given endpoint.
-     * The direction of the transfer is determined by the direction of the endpoint.
+     * Performs a bulk transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
      * <p>
-     * This method transfers data starting from index 0 in the buffer.
-     * To specify a different offset, use
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
      * {@link #bulkTransfer(UsbEndpoint, byte[], int, int, int)}.
      * </p>
      *
@@ -216,17 +200,15 @@ public class UsbDeviceConnection {
      * @param length   the length of the data to send or receive
      * @param timeout  in milliseconds, 0 is infinite
      *
-     * @return length of data transferred (or zero) for success,
-     * or negative value for failure
+     * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int bulkTransfer(UsbEndpoint endpoint,
-                            byte[] buffer, int length, int timeout) {
+    public int bulkTransfer(UsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
         return bulkTransfer(endpoint, buffer, 0, length, timeout);
     }
 
     /**
-     * Performs a bulk transaction on the given endpoint.
-     * The direction of the transfer is determined by the direction of the endpoint.
+     * Performs a bulk transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
      *
      * @param endpoint the endpoint for this transaction
      * @param buffer   buffer for data to send or receive
@@ -234,28 +216,26 @@ public class UsbDeviceConnection {
      * @param length   the length of the data to send or receive
      * @param timeout  in milliseconds, 0 is infinite
      *
-     * @return length of data transferred (or zero) for success,
-     * or negative value for failure
+     * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int bulkTransfer(UsbEndpoint endpoint,
-                            byte[] buffer, int offset, int length, int timeout) {
+    public int bulkTransfer(UsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
-        return native_bulk_request(endpoint.getAddress(), buffer, offset, length, timeout);
+        return nativeBulkRequest(device.getNativeObject(), endpoint.getAddress(), buffer, offset, length, timeout);
     }
 
     /**
      * Reset USB port for the connected device.
      *
-     * @return true if reset succeeds.
-     * @hide
+     * @return {@link LibusbError} The libusb result.
      */
-    @SuppressLint("Doclava125")
-    public boolean resetDevice() {
-        return native_reset_device();
+    public LibusbError resetDevice() {
+        return LibusbError.fromNative(nativeResetDevice(device.getNativeObject()));
     }
 
+    //TODO: Implement the usbrequest async methods
+
     /**
-     * Waits for the result of a {@link android.hardware.usb.UsbRequest#queue} operation
+     * Waits for the result of a {@link UsbRequest#queue} operation
      * <p>Note that this may return requests queued on multiple
      * {@link android.hardware.usb.UsbEndpoint}s. When multiple endpoints are in use,
      * {@link android.hardware.usb.UsbRequest#getEndpoint} and {@link
@@ -263,6 +243,7 @@ public class UsbDeviceConnection {
      * the result of this function.</p>
      *
      * @return a completed USB request, or null if an error occurred
+     *
      * @throws IllegalArgumentException Before API {@value Build.VERSION_CODES#O}: if the number of
      *                                  bytes read or written is more than the limit of the
      *                                  request's buffer. The number of bytes is determined by the
@@ -284,7 +265,7 @@ public class UsbDeviceConnection {
         }
         if (request != null) {
             request.dequeue(
-                mContext.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O);
+                    context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O);
         }
         return request;
     }
@@ -303,6 +284,7 @@ public class UsbDeviceConnection {
      * @param timeout timeout in milliseconds. If 0 this method does not wait.
      *
      * @return a completed USB request, or {@code null} if an error occurred
+     *
      * @throws BufferOverflowException if the number of bytes read or written is more than the
      *                                 limit of the request's buffer. The number of bytes is
      *                                 determined by the {@code length} parameter of
@@ -320,12 +302,12 @@ public class UsbDeviceConnection {
 
     /**
      * Returns the serial number for the device.
-     * This will return null if the device has not been opened.
      *
-     * @return the device serial number
+     * @return {@link String } The device serial number
      */
+    @NonNull
     public String getSerial() {
-        return native_get_serial();
+        return device.getSerialNumber();
     }
 
     private static void checkBounds(byte[] buffer, int start, int length) {
@@ -335,31 +317,27 @@ public class UsbDeviceConnection {
         }
     }
 
-    private native boolean native_open(String deviceName, FileDescriptor pfd);
+    private native void nativeClose(@NonNull ByteBuffer device);
 
-    private native void native_close();
+    @Nullable
+    private native byte[] nativeGetRawDescriptor(int fd);
 
-    private native int native_get_fd();
+    private native int nativeClaimInterface(@NonNull ByteBuffer device, int interfaceID, boolean force);
 
-    private native byte[] native_get_desc();
+    private native int nativeReleaseInterface(@NonNull ByteBuffer device, int interfaceID);
 
-    private native boolean native_claim_interface(int interfaceID, boolean force);
+    private native int nativeSetInterface(@NonNull ByteBuffer device, int interfaceID, int alternateSetting);
 
-    private native boolean native_release_interface(int interfaceID);
+    private native int nativeSetConfiguration(@NonNull ByteBuffer device, int configurationID);
 
-    private native boolean native_set_interface(int interfaceID, int alternateSetting);
+    private native int nativeControlRequest(@NonNull ByteBuffer device, int requestType, int request, int value,
+                                            int index, byte[] buffer, int offset, int length, int timeout);
 
-    private native boolean native_set_configuration(int configurationID);
+    private native int nativeBulkRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
+                                         int length, int timeout);
 
-    private native int native_control_request(int requestType, int request, int value,
-                                              int index, byte[] buffer, int offset, int length, int timeout);
+    private native int nativeResetDevice(@NonNull ByteBuffer device);
 
-    private native int native_bulk_request(int endpoint, byte[] buffer,
-                                           int offset, int length, int timeout);
-
+    //TODO
     private native UsbRequest native_request_wait(long timeout) throws TimeoutException;
-
-    private native String native_get_serial();
-
-    private native boolean native_reset_device();
 }
