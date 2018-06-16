@@ -16,7 +16,6 @@ package com.jwoolston.android.libusb;
  * limitations under the License.
  */
 
-import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -42,23 +41,23 @@ public class UsbDevice {
     private static final boolean DEBUG = false;
 
     @NonNull
-    private final android.hardware.usb.UsbDevice mDevice;
+    private final android.hardware.usb.UsbDevice device;
 
     @NonNull
-    private final String mName;
+    private final String name;
     @Nullable
-    private final String mManufacturerName;
+    private final String manufacturerName;
     @Nullable
-    private final String mProductName;
+    private final String productName;
     @NonNull
-    private final String mVersion;
-    @Nullable
-    private final String mSerialNumber;
-    private final int mVendorId;
-    private final int mProductId;
-    private final int mClass;
-    private final int mSubclass;
-    private final int mProtocol;
+    private final String version;
+    @NonNull
+    private final String serialNumber;
+    private final int    vendorId;
+    private final int    productId;
+    private final int    deviceClass;
+    private final int    subclass;
+    private final int    protocol;
 
     private final int fileDescriptor;
 
@@ -67,10 +66,10 @@ public class UsbDevice {
 
     /** All configurations for this device, only null during creation */
     @Nullable
-    private Parcelable[] mConfigurations;
+    private UsbConfiguration[]   configurations;
     /** All interfaces on the device. Initialized on first call to getInterfaceList */
     @Nullable
-    private UsbInterface[] mInterfaces;
+    private UsbInterface[] interfaces;
 
     @Nullable
     private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);
@@ -88,22 +87,22 @@ public class UsbDevice {
     }
 
     private UsbDevice(@NonNull android.hardware.usb.UsbDeviceConnection connection,
-                      @NonNull android.hardware.usb.UsbDevice device, ByteBuffer nativeObject) {
+                      @NonNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
         Preconditions.checkNotNull(nativeObject, "UsbDevice initialization failed.");
         this.nativeObject = nativeObject;
-        mDevice = device;
-        mName = device.getDeviceName();
-        mVendorId = device.getVendorId();
-        mProductId = device.getProductId();
-        mClass = device.getDeviceClass();
-        mSubclass = device.getDeviceSubclass();
-        mProtocol = device.getDeviceProtocol();
+        this.device = device;
+        name = device.getDeviceName();
+        vendorId = device.getVendorId();
+        productId = device.getProductId();
+        deviceClass = device.getDeviceClass();
+        subclass = device.getDeviceSubclass();
+        protocol = device.getDeviceProtocol();
 
         LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
-        mManufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
-        mProductName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
-        mVersion = nativeGetDeviceVersion(descriptor.getNativeObject());
-        mSerialNumber = connection.getSerial();
+        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
+        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
+        version = nativeGetDeviceVersion(descriptor.getNativeObject());
+        serialNumber = connection.getSerial();
 
         fileDescriptor = connection.getFileDescriptor();
     }
@@ -118,15 +117,14 @@ public class UsbDevice {
     }
 
     /**
-     * Returns the name of the device.
-     * In the standard implementation, this is the path of the device file
-     * for the device in the usbfs file system.
+     * Returns the name of the device. In the standard implementation, this is the path of the device file for the
+     * device in the usbfs file system.
      *
      * @return the device name
      */
     @NonNull
     public String getDeviceName() {
-        return mName;
+        return name;
     }
 
     /**
@@ -136,7 +134,7 @@ public class UsbDevice {
      */
     @Nullable
     public String getManufacturerName() {
-        return mManufacturerName;
+        return manufacturerName;
     }
 
     /**
@@ -146,7 +144,7 @@ public class UsbDevice {
      */
     @Nullable
     public String getProductName() {
-        return mProductName;
+        return productName;
     }
 
     /**
@@ -156,7 +154,7 @@ public class UsbDevice {
      */
     @NonNull
     public String getVersion() {
-        return mVersion;
+        return version;
     }
 
     /**
@@ -164,21 +162,19 @@ public class UsbDevice {
      *
      * @return the serial number name, or {@code null} if the property could not be read
      */
-    @Nullable
+    @NonNull
     public String getSerialNumber() {
-        return mSerialNumber;
+        return serialNumber;
     }
 
     /**
-     * Returns a unique integer ID for the device.
-     * This is a convenience for clients that want to use an integer to represent
-     * the device, rather than the device name.
-     * IDs are not persistent across USB disconnects.
+     * Returns a unique integer ID for the device. This is a convenience for clients that want to use an integer to
+     * represent the device, rather than the device name. IDs are not persistent across USB disconnects.
      *
      * @return the device ID
      */
     public int getDeviceId() {
-        return mDevice.getDeviceId();
+        return device.getDeviceId();
     }
 
     /**
@@ -187,7 +183,7 @@ public class UsbDevice {
      * @return the device vendor ID
      */
     public int getVendorId() {
-        return mVendorId;
+        return vendorId;
     }
 
     /**
@@ -196,7 +192,7 @@ public class UsbDevice {
      * @return the device product ID
      */
     public int getProductId() {
-        return mProductId;
+        return productId;
     }
 
     /**
@@ -206,7 +202,7 @@ public class UsbDevice {
      * @return the devices's class
      */
     public int getDeviceClass() {
-        return mClass;
+        return deviceClass;
     }
 
     /**
@@ -215,7 +211,7 @@ public class UsbDevice {
      * @return the device's subclass
      */
     public int getDeviceSubclass() {
-        return mSubclass;
+        return subclass;
     }
 
     /**
@@ -224,7 +220,7 @@ public class UsbDevice {
      * @return the device's protocol
      */
     public int getDeviceProtocol() {
-        return mProtocol;
+        return protocol;
     }
 
     /**
@@ -233,7 +229,7 @@ public class UsbDevice {
      * @return the number of configurations
      */
     public int getConfigurationCount() {
-        return mConfigurations.length;
+        return configurations.length;
     }
 
     /**
@@ -243,29 +239,29 @@ public class UsbDevice {
      */
     @NonNull
     public UsbConfiguration getConfiguration(int index) {
-        return (UsbConfiguration) mConfigurations[index];
+        return (UsbConfiguration) configurations[index];
     }
 
     @Nullable
     private UsbInterface[] getInterfaceList() {
-        if (mInterfaces == null) {
-            int configurationCount = mConfigurations.length;
+        if (interfaces == null) {
+            int configurationCount = configurations.length;
             int interfaceCount = 0;
             for (int i = 0; i < configurationCount; i++) {
-                UsbConfiguration configuration = (UsbConfiguration) mConfigurations[i];
+                UsbConfiguration configuration = (UsbConfiguration) configurations[i];
                 interfaceCount += configuration.getInterfaceCount();
             }
-            mInterfaces = new UsbInterface[interfaceCount];
+            interfaces = new UsbInterface[interfaceCount];
             int offset = 0;
             for (int i = 0; i < configurationCount; i++) {
-                UsbConfiguration configuration = (UsbConfiguration) mConfigurations[i];
+                UsbConfiguration configuration = (UsbConfiguration) configurations[i];
                 interfaceCount = configuration.getInterfaceCount();
                 for (int j = 0; j < interfaceCount; j++) {
-                    mInterfaces[offset++] = configuration.getInterface(j);
+                    interfaces[offset++] = configuration.getInterface(j);
                 }
             }
         }
-        return mInterfaces;
+        return interfaces;
     }
 
     /**
@@ -296,37 +292,38 @@ public class UsbDevice {
      *
      * @hide
      */
-    public void setConfigurations(@NonNull Parcelable[] configuration) {
-        mConfigurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
+    public void setConfigurations(@NonNull UsbConfiguration[] configuration) {
+        configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof UsbDevice) {
-            return ((UsbDevice) o).mName.equals(mName);
-        } else if (o instanceof String) {
-            return ((String) o).equals(mName);
+            return ((UsbDevice) o).name.equals(name);
         } else {
-            return false;
+            return (o instanceof String && ((String) o).equals(name));
         }
     }
 
     @Override
     public int hashCode() {
-        return mName.hashCode();
+        return name.hashCode();
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("UsbDevice[mName=" + mName +
-            ",mVendorId=" + mVendorId + ",mProductId=" + mProductId +
-            ",mClass=" + mClass + ",mSubclass=" + mSubclass + ",mProtocol=" + mProtocol +
-            ",mManufacturerName=" + mManufacturerName + ",mProductName=" + mProductName +
-            ",mVersion=" + mVersion + ",mSerialNumber=" + mSerialNumber + ",mConfigurations=[");
-        if (mConfigurations != null) {
-            for (int i = 0; i < mConfigurations.length; i++) {
+        StringBuilder builder = new StringBuilder("UsbDevice[name=" + name +
+                                                  ",vendorId=" + vendorId + ",productId=" + productId +
+                                                  ",deviceClass=" + deviceClass + ",subclass=" + subclass
+                                                  + ",protocol=" + protocol +
+                                                  ",manufacturerName=" + manufacturerName + ",productName=" + productName
+                                                  +
+                                                  ",version=" + version + ",serialNumber=" + serialNumber
+                                                  + ",configurations=[");
+        if (configurations != null) {
+            for (UsbConfiguration configuration : configurations) {
                 builder.append("\n");
-                builder.append(mConfigurations[i].toString());
+                builder.append(configuration.toString());
             }
         }
         builder.append("]");
