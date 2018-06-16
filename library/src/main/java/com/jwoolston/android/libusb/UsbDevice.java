@@ -26,22 +26,15 @@ import com.jwoolston.android.libusb.util.Preconditions;
 import java.nio.ByteBuffer;
 
 /**
- * This class represents a USB device attached to the android device with the android device
- * acting as the USB host.
- * Each device contains one or more {@link UsbInterface}s, each of which contains a number of
- * {@link UsbEndpoint}s (the channels via which data is transmitted over USB).
+ * This class represents a USB device attached to the android device with the android device acting as the USB host.
+ * Each device contains one or more {@link UsbInterface}s, each of which contains a number of {@link UsbEndpoint}s
+ * (the channels via which data is transmitted over USB).
  * <p>
- * <p> This class contains information (along with {@link UsbInterface} and {@link UsbEndpoint})
- * that describes the capabilities of the USB device.
- * To communicate with the device, you open a {@link UsbDeviceConnection} for the device
- * and use {@link UsbRequest} to send and receive data on an endpoint.
- * {@link UsbDeviceConnection#controlTransfer} is used for control requests on endpoint zero.
+ * <p> This class contains information (along with {@link UsbInterface} and {@link UsbEndpoint}) that describes the
+ * capabilities of the USB device. To communicate with the device, you open a {@link UsbDeviceConnection} for the device
+ * and use {@link UsbRequest} to send and receive data on an endpoint. {@link UsbDeviceConnection#controlTransfer} is
+ * used for control requests on endpoint zero.
  * <p>
- * <div class="special reference">
- * <h3>Developer Guides</h3>
- * <p>For more information about communicating with USB hardware, read the
- * <a href="{@docRoot}guide/topics/connectivity/usb/index.html">USB</a> developer guide.</p>
- * </div>
  */
 public class UsbDevice {
 
@@ -67,6 +60,8 @@ public class UsbDevice {
     private final int mSubclass;
     private final int mProtocol;
 
+    private final int fileDescriptor;
+
     @NonNull
     private final ByteBuffer nativeObject;
 
@@ -84,8 +79,9 @@ public class UsbDevice {
 
     private native String nativeGetProductNameString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
 
-    public native String nativeGetDeviceVersion(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
+    private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
 
+    @NonNull
     static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, @NonNull android.hardware.usb.UsbDevice device,
                                        @NonNull android.hardware.usb.UsbDeviceConnection connection) {
         return new UsbDevice(connection, device, wrapDevice(context.getNativeObject(), connection.getFileDescriptor()));
@@ -106,13 +102,19 @@ public class UsbDevice {
         LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
         mManufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
         mProductName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
-        mVersion = nativeGetDeviceVersion(nativeObject, descriptor.getNativeObject());
+        mVersion = nativeGetDeviceVersion(descriptor.getNativeObject());
         mSerialNumber = connection.getSerial();
+
+        fileDescriptor = connection.getFileDescriptor();
     }
 
     @NonNull
     ByteBuffer getNativeObject() {
         return nativeObject;
+    }
+
+    public int getFileDescriptor() {
+        return fileDescriptor;
     }
 
     /**
@@ -122,8 +124,8 @@ public class UsbDevice {
      *
      * @return the device name
      */
-    public @NonNull
-    String getDeviceName() {
+    @NonNull
+    public String getDeviceName() {
         return mName;
     }
 
@@ -132,8 +134,8 @@ public class UsbDevice {
      *
      * @return the manufacturer name, or {@code null} if the property could not be read
      */
-    public @Nullable
-    String getManufacturerName() {
+    @Nullable
+    public String getManufacturerName() {
         return mManufacturerName;
     }
 
@@ -142,8 +144,8 @@ public class UsbDevice {
      *
      * @return the product name, or {@code null} if the property could not be read
      */
-    public @Nullable
-    String getProductName() {
+    @Nullable
+    public String getProductName() {
         return mProductName;
     }
 
@@ -152,8 +154,8 @@ public class UsbDevice {
      *
      * @return the device version
      */
-    public @NonNull
-    String getVersion() {
+    @NonNull
+    public String getVersion() {
         return mVersion;
     }
 
@@ -162,8 +164,8 @@ public class UsbDevice {
      *
      * @return the serial number name, or {@code null} if the property could not be read
      */
-    public @Nullable
-    String getSerialNumber() {
+    @Nullable
+    public String getSerialNumber() {
         return mSerialNumber;
     }
 
@@ -239,13 +241,13 @@ public class UsbDevice {
      *
      * @return the configuration
      */
-    public @NonNull
-    UsbConfiguration getConfiguration(int index) {
+    @NonNull
+    public UsbConfiguration getConfiguration(int index) {
         return (UsbConfiguration) mConfigurations[index];
     }
 
-    private @Nullable
-    UsbInterface[] getInterfaceList() {
+    @Nullable
+    private UsbInterface[] getInterfaceList() {
         if (mInterfaces == null) {
             int configurationCount = mConfigurations.length;
             int interfaceCount = 0;

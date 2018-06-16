@@ -11,7 +11,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type,
     LOGD("Wrapping USB Device Handle.");
     struct libusb_device_handle *deviceHandle;
 
-    struct libusb_context *ctx = (libusb_context *) (*env)->GetDirectBufferAddress(env, context);
+    struct libusb_context *ctx = (struct libusb_context *) (*env)->GetDirectBufferAddress(env, context);
     libusb_wrap_fd(ctx, fd, &deviceHandle);
 
     if (deviceHandle == NULL) {
@@ -28,7 +28,8 @@ Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type,
 JNIEXPORT jstring JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetManufacturerString(JNIEnv *env, jobject instance, jobject device,
                                                                         jobject descriptor) {
-    struct libusb_device_handle *deviceHandle = (libusb_device_handle *) (*env)->GetDirectBufferAddress(env, device);
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                            device);
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 
@@ -44,7 +45,8 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetManufacturerString(JNIEnv *
 JNIEXPORT jstring JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetProductNameString(JNIEnv *env, jobject instance, jobject device,
                                                                        jobject descriptor) {
-    struct libusb_device_handle *deviceHandle = (libusb_device_handle *) (*env)->GetDirectBufferAddress(env, device);
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                            device);
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 
@@ -57,9 +59,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetProductNameString(JNIEnv *e
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, jobject instance, jobject device,
-                                                                   jobject descriptor) {
-    struct libusb_device_handle *deviceHandle = (libusb_device_handle *) (*env)->GetDirectBufferAddress(env, device);
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, jobject instance, jobject descriptor) {
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
     uint16_t bcdDevice = deviceDescriptor->bcdDevice;

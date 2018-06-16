@@ -1,9 +1,7 @@
 package com.jwoolston.android.libusb;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -12,12 +10,8 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.RequiresDevice;
 import android.support.test.runner.AndroidJUnit4;
-import android.util.Log;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 /**
  * @author Jared Woolston (Jared.Woolston@gmail.com)
@@ -25,43 +19,12 @@ import org.junit.runners.MethodSorters;
 @RequiresDevice
 @MediumTest
 @RunWith(AndroidJUnit4.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class UsbManagerTest extends USBTestCase {
+public class UsbDeviceConnectionTest extends USBTestCase {
 
-    private static final String TAG = "UsbManagerTest";
-
-    @Ignore("No way to ensure we didn't already have permission.")
-    @Test
-    public void registerDevice_1_PermissionDenied() {
-        Log.d(TAG, "Executing permission denied registration test.");
-        Context context = InstrumentationRegistry.getTargetContext();
-        android.hardware.usb.UsbManager androidManager = (android.hardware.usb.UsbManager) context.getSystemService
-                (Context.USB_SERVICE);
-        final UsbManager _manager = new UsbManager(context);
-        android.hardware.usb.UsbDevice device = findDevice(androidManager);
-        requestPermissions(context, androidManager, device, new DeviceAvailable() {
-            @Override public void onDeviceAvailable(@NonNull android.hardware.usb.UsbDevice device) {
-                _manager.destroy();
-                assertNull("onDeviceAvailable() should have never been called.", device);
-            }
-
-            @Override public void onDeviceDenied(@NonNull android.hardware.usb.UsbDevice device) {
-                boolean thrown = false;
-                try {
-                    _manager.registerDevice(device);
-                } catch (IllegalAccessException e) {
-                    thrown = true;
-                }
-                _manager.destroy();
-                assertTrue("Exception was not thrown as expected from attempting to register.", thrown);
-            }
-        });
-        denyPermissions();
-    }
+    private static final String TAG = "UsbDeviceConnectionTest";
 
     @Test
-    public void registerDevice_2_PermissionGranted() {
-        Log.d(TAG, "Executing permission granted registration test.");
+    public void getFileDescriptor() {
         Context context = InstrumentationRegistry.getTargetContext();
         android.hardware.usb.UsbManager androidManager = (android.hardware.usb.UsbManager) context.getSystemService
                 (Context.USB_SERVICE);
@@ -71,8 +34,9 @@ public class UsbManagerTest extends USBTestCase {
             @Override public void onDeviceAvailable(@NonNull android.hardware.usb.UsbDevice device) {
                 try {
                     UsbDeviceConnection deviceConnection = _manager.registerDevice(device);
+                    final int fd = deviceConnection.getFileDescriptor();
                     _manager.destroy();
-                    assertNotNull("Failed to register USB device.", deviceConnection);
+                    assertTrue("File descriptor was less than 0.", 0 <= fd);
                 } catch (IllegalAccessException e) {
                     _manager.destroy();
                     assertNull("Registration threw exception.", e);
@@ -88,8 +52,7 @@ public class UsbManagerTest extends USBTestCase {
     }
 
     @Test
-    public void registerDevice_3_Double() {
-        Log.d(TAG, "Executing double registration test.");
+    public void getRawDescriptors() {
         Context context = InstrumentationRegistry.getTargetContext();
         android.hardware.usb.UsbManager androidManager = (android.hardware.usb.UsbManager) context.getSystemService
                 (Context.USB_SERVICE);
@@ -99,12 +62,9 @@ public class UsbManagerTest extends USBTestCase {
             @Override public void onDeviceAvailable(@NonNull android.hardware.usb.UsbDevice device) {
                 try {
                     UsbDeviceConnection deviceConnection = _manager.registerDevice(device);
-                    assertNotNull("Failed to register USB device.", deviceConnection);
-                    UsbDeviceConnection deviceConnection2 = _manager.registerDevice(device);
-                    assertEquals("Registering the same device should have returned the same device.",
-                                 deviceConnection, deviceConnection2);
-                    assertSame("Registering the same device should have returned identical references.",
-                               deviceConnection, deviceConnection2);
+                    final byte[] descriptor = deviceConnection.getRawDescriptors();
+                    _manager.destroy();
+                    assertNotNull("Raw descriptor was null.", descriptor);
                 } catch (IllegalAccessException e) {
                     _manager.destroy();
                     assertNull("Registration threw exception.", e);

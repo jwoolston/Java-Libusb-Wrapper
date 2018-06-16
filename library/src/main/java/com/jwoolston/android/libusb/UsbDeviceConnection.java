@@ -18,7 +18,6 @@ package com.jwoolston.android.libusb;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
-import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -30,47 +29,52 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.TimeoutException;
 
 /**
- * This class is used for sending and receiving data and control messages to a USB device.
- * Instances of this class are created by {@link UsbManager#openDevice}.
+ * This class is used for sending and receiving data and control messages to a USB device. nstances of this class are
+ * created by {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)}.
  */
 public class UsbDeviceConnection {
 
     private static final String TAG = "UsbDeviceConnection";
 
-    private final UsbDevice mDevice;
+    private final LibUsbContext                            libUsbContext;
+    private final android.hardware.usb.UsbDeviceConnection androidConnection;
+    private final UsbDevice                                device;
 
-    private Context mContext;
+    private Context context;
+
     // used by the JNI code
     private long mNativeContext;
 
-    /**
-     * UsbDevice should only be instantiated by UsbService implementation
-     *
-     * @hide
-     */
-    public UsbDeviceConnection(UsbDevice device) {
-        mDevice = device;
+    @NonNull
+    static UsbDeviceConnection fromAndroidConnection(@NonNull LibUsbContext context,
+                                       @NonNull android.hardware.usb.UsbDeviceConnection connection,
+                                       @NonNull UsbDevice device) {
+        return new UsbDeviceConnection(context, connection, device);
     }
 
-    /* package */ boolean open(String name, ParcelFileDescriptor pfd, @NonNull Context context) {
-        mContext = context.getApplicationContext();
-        boolean wasOpened = native_open(name, pfd.getFileDescriptor());
-        return wasOpened;
+    /**
+     * UsbDevice should only be instantiated by UsbService implementation
+     */
+    private UsbDeviceConnection(@NonNull LibUsbContext context,
+                                @NonNull android.hardware.usb.UsbDeviceConnection connection,
+                                @NonNull UsbDevice device) {
+        libUsbContext = context;
+        androidConnection = connection;
+        this.device = device;
     }
 
     /**
      * @return The application context the connection was created for.
-     * @hide
      */
     @Nullable
     public Context getContext() {
-        return mContext;
+        return context;
     }
 
     /**
      * Releases all system resources related to the device.
      * Once the object is closed it cannot be used again.
-     * The client must call {@link UsbManager#openDevice} again
+     * The client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again
      * to retrieve a new instance to reestablish communication with the device.
      */
     public void close() {
@@ -87,7 +91,7 @@ public class UsbDeviceConnection {
      * @return the native file descriptor
      */
     public int getFileDescriptor() {
-        return native_get_fd();
+        return device.getFileDescriptor();
     }
 
     /**
@@ -97,8 +101,9 @@ public class UsbDeviceConnection {
      *
      * @return raw USB descriptors
      */
+    @Nullable
     public byte[] getRawDescriptors() {
-        return native_get_desc();
+        return nativeGetRawDescriptor(device.getFileDescriptor());
     }
 
     /**
@@ -198,7 +203,7 @@ public class UsbDeviceConnection {
                                byte[] buffer, int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         return native_control_request(requestType, request, value, index,
-            buffer, offset, length, timeout);
+                                      buffer, offset, length, timeout);
     }
 
     /**
@@ -247,7 +252,6 @@ public class UsbDeviceConnection {
      * Reset USB port for the connected device.
      *
      * @return true if reset succeeds.
-     * @hide
      */
     @SuppressLint("Doclava125")
     public boolean resetDevice() {
@@ -263,6 +267,7 @@ public class UsbDeviceConnection {
      * the result of this function.</p>
      *
      * @return a completed USB request, or null if an error occurred
+     *
      * @throws IllegalArgumentException Before API {@value Build.VERSION_CODES#O}: if the number of
      *                                  bytes read or written is more than the limit of the
      *                                  request's buffer. The number of bytes is determined by the
@@ -284,7 +289,7 @@ public class UsbDeviceConnection {
         }
         if (request != null) {
             request.dequeue(
-                mContext.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O);
+                    context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O);
         }
         return request;
     }
@@ -303,6 +308,7 @@ public class UsbDeviceConnection {
      * @param timeout timeout in milliseconds. If 0 this method does not wait.
      *
      * @return a completed USB request, or {@code null} if an error occurred
+     *
      * @throws BufferOverflowException if the number of bytes read or written is more than the
      *                                 limit of the request's buffer. The number of bytes is
      *                                 determined by the {@code length} parameter of
@@ -341,7 +347,8 @@ public class UsbDeviceConnection {
 
     private native int native_get_fd();
 
-    private native byte[] native_get_desc();
+    @Nullable
+    private native byte[] nativeGetRawDescriptor(int fd);
 
     private native boolean native_claim_interface(int interfaceID, boolean force);
 

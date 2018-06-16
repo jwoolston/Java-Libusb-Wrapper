@@ -16,12 +16,11 @@
 package com.jwoolston.android.libusb;
 
 import android.content.Context;
-import android.hardware.usb.UsbDeviceConnection;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * This class allows you to access the state of USB and communicate with USB devices.
@@ -41,18 +40,24 @@ public class UsbManager {
 
     private final Context context;
     private final android.hardware.usb.UsbManager androidUsbManager;
-    final ConcurrentHashMap<String, UsbDevice> localDeviceCache = new ConcurrentHashMap<>();
+    private final HashMap<String, UsbDevice> localDeviceCache = new HashMap<>();
+    private final HashMap<String, UsbDeviceConnection> localConnectionCache = new HashMap<>();
     private final LibUsbContext libUsbContext;
 
     @Nullable
-    private native ByteBuffer initialize();
+    private native ByteBuffer nativeInitialize();
 
     private native void nativeDestroy(@NonNull ByteBuffer context);
 
     public UsbManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
         androidUsbManager = (android.hardware.usb.UsbManager) context.getSystemService(Context.USB_SERVICE);
-        libUsbContext = new LibUsbContext(initialize());
+        libUsbContext = new LibUsbContext(nativeInitialize());
+    }
+
+    @NonNull
+    LibUsbContext getLibUsbContext() {
+        return libUsbContext;
     }
 
     public void destroy() {
@@ -62,21 +67,25 @@ public class UsbManager {
     }
 
     @NonNull
-    public UsbDevice registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws IllegalAccessException {
+    public UsbDeviceConnection registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws IllegalAccessException {
         final String key = device.getDeviceName();
-        if (localDeviceCache.containsKey(key)) {
+        if (localConnectionCache.containsKey(key)) {
             // We have already dealt with this device, do nothing
             Log.d(TAG, "returning cached device.");
-            return localDeviceCache.get(key);
+            return localConnectionCache.get(key);
         } else {
-            UsbDeviceConnection connection = androidUsbManager.openDevice(device);
+            android.hardware.usb.UsbDeviceConnection connection = androidUsbManager.openDevice(device);
             if (connection == null) {
                 // TODO: Replace with custom exception
                 throw new IllegalAccessException("Failed to open device: " + device);
             }
             final UsbDevice usbDevice = UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
+            final UsbDeviceConnection usbConnection = UsbDeviceConnection.fromAndroidConnection(libUsbContext,
+                                                                                                connection,
+                                                                                                usbDevice);
             localDeviceCache.put(key, usbDevice);
-            return usbDevice;
+            localConnectionCache.put(key, usbConnection);
+            return usbConnection;
         }
     }
 
