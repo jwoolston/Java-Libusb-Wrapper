@@ -37,7 +37,7 @@ public class UsbDeviceConnectionTest extends USBTestCase {
                     final int fd = deviceConnection.getFileDescriptor();
                     _manager.destroy();
                     assertTrue("File descriptor was less than 0.", 0 <= fd);
-                } catch (IllegalAccessException e) {
+                } catch (DevicePermissionDenied e) {
                     _manager.destroy();
                     assertNull("Registration threw exception.", e);
                 }
@@ -65,7 +65,7 @@ public class UsbDeviceConnectionTest extends USBTestCase {
                     final byte[] descriptor = deviceConnection.getRawDescriptors();
                     _manager.destroy();
                     assertNotNull("Raw descriptor was null.", descriptor);
-                } catch (IllegalAccessException e) {
+                } catch (DevicePermissionDenied e) {
                     _manager.destroy();
                     assertNull("Registration threw exception.", e);
                 }

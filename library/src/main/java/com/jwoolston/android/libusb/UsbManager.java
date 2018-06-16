@@ -55,11 +55,6 @@ public class UsbManager {
         libUsbContext = new LibUsbContext(nativeInitialize());
     }
 
-    @NonNull
-    LibUsbContext getLibUsbContext() {
-        return libUsbContext;
-    }
-
     public void destroy() {
         if (libUsbContext != null) {
             nativeDestroy(libUsbContext.getNativeObject());
@@ -67,7 +62,7 @@ public class UsbManager {
     }
 
     @NonNull
-    public UsbDeviceConnection registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws IllegalAccessException {
+    public UsbDeviceConnection registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws DevicePermissionDenied {
         final String key = device.getDeviceName();
         if (localConnectionCache.containsKey(key)) {
             // We have already dealt with this device, do nothing
@@ -76,13 +71,11 @@ public class UsbManager {
         } else {
             android.hardware.usb.UsbDeviceConnection connection = androidUsbManager.openDevice(device);
             if (connection == null) {
-                // TODO: Replace with custom exception
-                throw new IllegalAccessException("Failed to open device: " + device);
+                throw new DevicePermissionDenied(device);
             }
             final UsbDevice usbDevice = UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
-            final UsbDeviceConnection usbConnection = UsbDeviceConnection.fromAndroidConnection(libUsbContext,
-                                                                                                connection,
-                                                                                                usbDevice);
+            final UsbDeviceConnection usbConnection = UsbDeviceConnection.fromAndroidConnection(libUsbContext, context,
+                                                                                                connection, usbDevice);
             localDeviceCache.put(key, usbDevice);
             localConnectionCache.put(key, usbConnection);
             return usbConnection;

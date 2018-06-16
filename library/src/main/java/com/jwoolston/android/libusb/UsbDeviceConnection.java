@@ -46,19 +46,20 @@ public class UsbDeviceConnection {
     private long mNativeContext;
 
     @NonNull
-    static UsbDeviceConnection fromAndroidConnection(@NonNull LibUsbContext context,
+    static UsbDeviceConnection fromAndroidConnection(@NonNull LibUsbContext libUsbContext, @NonNull Context context,
                                        @NonNull android.hardware.usb.UsbDeviceConnection connection,
                                        @NonNull UsbDevice device) {
-        return new UsbDeviceConnection(context, connection, device);
+        return new UsbDeviceConnection(libUsbContext, context, connection, device);
     }
 
     /**
      * UsbDevice should only be instantiated by UsbService implementation
      */
-    private UsbDeviceConnection(@NonNull LibUsbContext context,
+    private UsbDeviceConnection(@NonNull LibUsbContext libUsbContext, @NonNull Context context,
                                 @NonNull android.hardware.usb.UsbDeviceConnection connection,
                                 @NonNull UsbDevice device) {
-        libUsbContext = context;
+        this.libUsbContext = libUsbContext;
+        this.context = context;
         androidConnection = connection;
         this.device = device;
     }
@@ -72,21 +73,20 @@ public class UsbDeviceConnection {
     }
 
     /**
-     * Releases all system resources related to the device.
-     * Once the object is closed it cannot be used again.
-     * The client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again
-     * to retrieve a new instance to reestablish communication with the device.
+     * Releases all system resources related to the device. Once the object is closed it cannot be used again. The
+     * client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again to retrieve a new
+     * instance to reestablish communication with the device.
      */
-    public void close() {
+    //TODO: Do we need a close?
+    /*public void close() {
         if (mNativeContext != 0) {
             native_close();
         }
-    }
+    }*/
 
     /**
-     * Returns the native file descriptor for the device, or
-     * -1 if the device is not opened.
-     * This is intended for passing to native code to access the device.
+     * Returns the native file descriptor for the device, or -1 if the device is not opened. This is intended for
+     * passing to native code to access the device.
      *
      * @return the native file descriptor
      */
@@ -95,8 +95,7 @@ public class UsbDeviceConnection {
     }
 
     /**
-     * Returns the raw USB descriptors for the device.
-     * This can be used to access descriptors not supported directly
+     * Returns the raw USB descriptors for the device. This can be used to access descriptors not supported directly
      * via the higher level APIs.
      *
      * @return raw USB descriptors
@@ -107,18 +106,19 @@ public class UsbDeviceConnection {
     }
 
     /**
-     * Claims exclusive access to a {@link android.hardware.usb.UsbInterface}.
-     * This must be done before sending or receiving data on any
-     * {@link android.hardware.usb.UsbEndpoint}s belonging to the interface.
+     * Claims exclusive access to a {@link UsbInterface}. This must be done before sending or receiving data on any
+     * {@link UsbEndpoint}s belonging to the interface.
      *
      * @param intf  the interface to claim
      * @param force true to disconnect kernel driver if necessary
      *
-     * @return true if the interface was successfully claimed
+     * @return {@link LibusbError} if the interface was successfully claimed
      */
-    public boolean claimInterface(UsbInterface intf, boolean force) {
-        return native_claim_interface(intf.getId(), force);
+    public LibusbError claimInterface(UsbInterface intf, boolean force) {
+        return LibusbError.fromNative(nativeClaimInterface(device.getNativeObject(), intf.getId(), force));
     }
+
+    // TODO -------------->
 
     /**
      * Releases exclusive access to a {@link android.hardware.usb.UsbInterface}.
@@ -350,7 +350,7 @@ public class UsbDeviceConnection {
     @Nullable
     private native byte[] nativeGetRawDescriptor(int fd);
 
-    private native boolean native_claim_interface(int interfaceID, boolean force);
+    private native int nativeClaimInterface(@NonNull ByteBuffer device, int interfaceID, boolean force);
 
     private native boolean native_release_interface(int interfaceID);
 

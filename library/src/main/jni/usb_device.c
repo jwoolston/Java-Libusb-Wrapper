@@ -12,15 +12,15 @@ Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type,
     struct libusb_device_handle *deviceHandle;
 
     struct libusb_context *ctx = (struct libusb_context *) (*env)->GetDirectBufferAddress(env, context);
-    libusb_wrap_fd(ctx, fd, &deviceHandle);
+    int ret = libusb_wrap_fd(ctx, fd, &deviceHandle);
 
     if (deviceHandle == NULL) {
-        LOGE("Failed to wrap usb device file descriptor.");
+        LOGE("Failed to wrap usb device file descriptor. Error: %s", libusb_strerror((enum libusb_error) ret));
         return NULL;
     }
 
     // Claim the control interface
-    libusb_claim_interface(deviceHandle, 0);
+    //libusb_claim_interface(deviceHandle, 0);
 
     return ((*env)->NewDirectByteBuffer(env, (void *) deviceHandle, sizeof(struct libusb_device_handle)));
 }
@@ -29,7 +29,7 @@ JNIEXPORT jstring JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetManufacturerString(JNIEnv *env, jobject instance, jobject device,
                                                                         jobject descriptor) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
-                                                                                                            device);
+                                                                                                               device);
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 
@@ -46,7 +46,7 @@ JNIEXPORT jstring JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetProductNameString(JNIEnv *env, jobject instance, jobject device,
                                                                        jobject descriptor) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
-                                                                                                            device);
+                                                                                                               device);
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 

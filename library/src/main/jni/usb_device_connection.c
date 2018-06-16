@@ -23,3 +23,17 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeGetRawDescriptor(JNI
     }
     return ret;
 }
+
+JNIEXPORT jint JNICALL
+Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClaimInterface(JNIEnv *env, jobject instance,
+                                                                           jobject device, jint interfaceID,
+                                                                           jboolean force) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    int ret = libusb_claim_interface(deviceHandle, interfaceID);
+    if (ret == LIBUSB_ERROR_BUSY && force) {
+        libusb_detach_kernel_driver(deviceHandle, interfaceID);
+        ret = libusb_claim_interface(deviceHandle, interfaceID);
+    }
+    return ret;
+}
