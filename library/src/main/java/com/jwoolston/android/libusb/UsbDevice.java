@@ -16,12 +16,10 @@ package com.jwoolston.android.libusb;
  * limitations under the License.
  */
 
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
+import android.util.Log;
 import com.jwoolston.android.libusb.util.Preconditions;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -38,7 +36,6 @@ import java.nio.ByteBuffer;
 public class UsbDevice {
 
     private static final String TAG = "UsbDevice";
-    private static final boolean DEBUG = false;
 
     @NonNull
     private final android.hardware.usb.UsbDevice device;
@@ -71,49 +68,13 @@ public class UsbDevice {
     @Nullable
     private UsbInterface[] interfaces;
 
-    @Nullable
-    private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);
-
-    private native String nativeGetManufacturerString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
-
-    private native String nativeGetProductNameString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
-
-    private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
-
-    @NonNull
-    static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, @NonNull android.hardware.usb.UsbDevice device,
-                                       @NonNull android.hardware.usb.UsbDeviceConnection connection) {
-        return new UsbDevice(connection, device, wrapDevice(context.getNativeObject(), connection.getFileDescriptor()));
-    }
-
-    private UsbDevice(@NonNull android.hardware.usb.UsbDeviceConnection connection,
-                      @NonNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
-        Preconditions.checkNotNull(nativeObject, "UsbDevice initialization failed.");
-        this.nativeObject = nativeObject;
-        this.device = device;
-        name = device.getDeviceName();
-        vendorId = device.getVendorId();
-        productId = device.getProductId();
-        deviceClass = device.getDeviceClass();
-        subclass = device.getDeviceSubclass();
-        protocol = device.getDeviceProtocol();
-
-        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
-        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
-        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
-        version = nativeGetDeviceVersion(descriptor.getNativeObject());
-        serialNumber = connection.getSerial();
-
-        fileDescriptor = connection.getFileDescriptor();
-    }
-
-    @NonNull
-    ByteBuffer getNativeObject() {
-        return nativeObject;
-    }
-
     public int getFileDescriptor() {
         return fileDescriptor;
+    }
+
+    @NonNull
+    public android.hardware.usb.UsbDevice getAndroidDevice() {
+        return device;
     }
 
     /**
@@ -287,15 +248,6 @@ public class UsbDevice {
         return getInterfaceList()[index];
     }
 
-    /**
-     * Only used by UsbService implementation
-     *
-     * @hide
-     */
-    public void setConfigurations(@NonNull UsbConfiguration[] configuration) {
-        configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o instanceof UsbDevice) {
@@ -329,4 +281,60 @@ public class UsbDevice {
         builder.append("]");
         return builder.toString();
     }
+
+    @NonNull
+    static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, @NonNull android.hardware.usb.UsbDevice device,
+                                       @NonNull android.hardware.usb.UsbDeviceConnection connection) {
+        return new UsbDevice(connection, device, wrapDevice(context.getNativeObject(), connection.getFileDescriptor()));
+    }
+
+    private UsbDevice(@NonNull android.hardware.usb.UsbDeviceConnection connection,
+                      @NonNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
+        Preconditions.checkNotNull(nativeObject, "UsbDevice initialization failed.");
+        this.nativeObject = nativeObject;
+        this.device = device;
+        name = device.getDeviceName();
+        vendorId = device.getVendorId();
+        productId = device.getProductId();
+        deviceClass = device.getDeviceClass();
+        subclass = device.getDeviceSubclass();
+        protocol = device.getDeviceProtocol();
+
+        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
+        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
+        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
+        version = nativeGetDeviceVersion(descriptor.getNativeObject());
+        serialNumber = connection.getSerial();
+
+        fileDescriptor = connection.getFileDescriptor();
+    }
+
+    @NonNull
+    ByteBuffer getNativeObject() {
+        return nativeObject;
+    }
+
+    void populate(@NonNull UsbDeviceConnection usbConnection) {
+        final int numConfigurations = nativeGetConfigurationCount(getNativeObject());
+        final UsbConfiguration[] configurations = new UsbConfiguration[numConfigurations];
+        for (int i = 0; i < numConfigurations; ++i) {
+            configurations[i] = UsbConfiguration.fromNativeObject(getNativeObject(), i);
+        }
+        setConfigurations(configurations);
+    }
+
+    void setConfigurations(@NonNull UsbConfiguration[] configuration) {
+        configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
+    }
+
+    @Nullable
+    private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);
+
+    private native String nativeGetManufacturerString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
+
+    private native String nativeGetProductNameString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
+
+    private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
+
+    private native int nativeGetConfigurationCount(@NonNull ByteBuffer device);
 }

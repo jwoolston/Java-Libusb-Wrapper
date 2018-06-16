@@ -70,3 +70,10 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, 
     free(version);
     return retval;
 }
+
+JNIEXPORT jint JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetConfigurationCount(JNIEnv *env, jobject instance, jobject device) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    return deviceHandle->dev->num_configurations;
+}

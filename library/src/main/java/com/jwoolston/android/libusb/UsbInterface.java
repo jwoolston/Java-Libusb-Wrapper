@@ -17,73 +17,61 @@ package com.jwoolston.android.libusb;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.jwoolston.android.libusb.util.Preconditions;
+import java.nio.ByteBuffer;
 
 /**
- * A class representing an interface on a {@link UsbDevice}.
- * USB devices can have one or more interfaces, each one providing a different
- * piece of functionality, separate from the other interfaces.
- * An interface will have one or more {@link UsbEndpoint}s, which are the
- * channels by which the host transfers data with the device.
- * <p>
- * <div class="special reference">
- * <h3>Developer Guides</h3>
- * <p>For more information about communicating with USB hardware, read the
- * <a href="{@docRoot}guide/topics/usb/index.html">USB</a> developer guide.</p>
- * </div>
+ * A class representing an interface on a {@link UsbDevice}. USB devices can have one or more interfaces, each one
+ * providing a different piece of functionality, separate from the other interfaces. An interface will have one or
+ * more {@link UsbEndpoint}s, which are the channels by which the host transfers data with the device.
  */
 public class UsbInterface implements Parcelable {
 
-    private final int mId;
-    private final int mAlternateSetting;
+    private final int    id;
+    private final int    alternateSetting;
     @Nullable
-    private final String mName;
-    private final int mClass;
-    private final int mSubclass;
-    private final int mProtocol;
+    private final String name;
+    private final int    interfaceClass;
+    private final int    subclass;
+    private final int    protocol;
 
     /** All endpoints of this interface, only null during creation */
-    private Parcelable[] mEndpoints;
+    private Parcelable[] endpoints;
 
     /**
-     * UsbInterface should only be instantiated by UsbService implementation
-     *
-     * @hide
+     * UsbInterface should only be instantiated by UsbManager implementation
      */
-    public UsbInterface(int id, int alternateSetting, @Nullable String name,
-                        int Class, int subClass, int protocol) {
-        mId = id;
-        mAlternateSetting = alternateSetting;
-        mName = name;
-        mClass = Class;
-        mSubclass = subClass;
-        mProtocol = protocol;
+    UsbInterface(int id, int alternateSetting, @Nullable String name, int Class, int subClass, int protocol) {
+        this.id = id;
+        this.alternateSetting = alternateSetting;
+        this.name = name;
+        interfaceClass = Class;
+        subclass = subClass;
+        this.protocol = protocol;
     }
 
     /**
-     * Returns the interface's bInterfaceNumber field.
-     * This is an integer that along with the alternate setting uniquely identifies
-     * the interface on the device.
+     * Returns the interface's bInterfaceNumber field. This is an integer that along with the alternate setting
+     * uniquely identifies the interface on the device.
      *
      * @return the interface's ID
      */
     public int getId() {
-        return mId;
+        return id;
     }
 
     /**
-     * Returns the interface's bAlternateSetting field.
-     * This is an integer that along with the ID uniquely identifies
-     * the interface on the device.
-     * {@link UsbDeviceConnection#setInterface} can be used to switch between
+     * Returns the interface's bAlternateSetting field. This is an integer that along with the ID uniquely identifies
+     * the interface on the device. {@link UsbDeviceConnection#setInterface} can be used to switch between
      * two interfaces with the same ID but different alternate setting.
      *
      * @return the interface's alternate setting
      */
     public int getAlternateSetting() {
-        return mAlternateSetting;
+        return alternateSetting;
     }
 
     /**
@@ -93,17 +81,16 @@ public class UsbInterface implements Parcelable {
      */
     public @Nullable
     String getName() {
-        return mName;
+        return name;
     }
 
     /**
-     * Returns the interface's class field.
-     * Some useful constants for USB classes can be found in {@link UsbConstants}
+     * Returns the interface's class field. Some useful constants for USB classes can be found in {@link UsbConstants}
      *
      * @return the interface's class
      */
     public int getInterfaceClass() {
-        return mClass;
+        return interfaceClass;
     }
 
     /**
@@ -112,7 +99,7 @@ public class UsbInterface implements Parcelable {
      * @return the interface's subclass
      */
     public int getInterfaceSubclass() {
-        return mSubclass;
+        return subclass;
     }
 
     /**
@@ -121,7 +108,7 @@ public class UsbInterface implements Parcelable {
      * @return the interface's protocol
      */
     public int getInterfaceProtocol() {
-        return mProtocol;
+        return protocol;
     }
 
     /**
@@ -130,7 +117,7 @@ public class UsbInterface implements Parcelable {
      * @return the number of endpoints
      */
     public int getEndpointCount() {
-        return mEndpoints.length;
+        return endpoints.length;
     }
 
     /**
@@ -139,28 +126,26 @@ public class UsbInterface implements Parcelable {
      * @return the endpoint
      */
     public UsbEndpoint getEndpoint(int index) {
-        return (UsbEndpoint) mEndpoints[index];
+        return (UsbEndpoint) endpoints[index];
     }
 
     /**
-     * Only used by UsbService implementation
-     *
-     * @hide
+     * Only used by UsbManager implementation
      */
-    public void setEndpoints(Parcelable[] endpoints) {
-        mEndpoints = Preconditions.checkArrayElementsNotNull(endpoints, "endpoints");
+    void setEndpoints(Parcelable[] endpoints) {
+        this.endpoints = Preconditions.checkArrayElementsNotNull(endpoints, "endpoints");
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("UsbInterface[mId=" + mId +
-            ",mAlternateSetting=" + mAlternateSetting +
-            ",mName=" + mName + ",mClass=" + mClass +
-            ",mSubclass=" + mSubclass + ",mProtocol=" + mProtocol +
-            ",mEndpoints=[");
-        for (int i = 0; i < mEndpoints.length; i++) {
+        StringBuilder builder = new StringBuilder("UsbInterface[id=" + id +
+                                                  ",alternateSetting=" + alternateSetting +
+                                                  ",name=" + name + ",interfaceClass=" + interfaceClass +
+                                                  ",subclass=" + subclass + ",protocol=" + protocol +
+                                                  ",endpoints=[");
+        for (int i = 0; i < endpoints.length; i++) {
             builder.append("\n");
-            builder.append(mEndpoints[i].toString());
+            builder.append(endpoints[i].toString());
         }
         builder.append("]");
         return builder.toString();
@@ -191,12 +176,19 @@ public class UsbInterface implements Parcelable {
     }
 
     public void writeToParcel(Parcel parcel, int flags) {
-        parcel.writeInt(mId);
-        parcel.writeInt(mAlternateSetting);
-        parcel.writeString(mName);
-        parcel.writeInt(mClass);
-        parcel.writeInt(mSubclass);
-        parcel.writeInt(mProtocol);
-        parcel.writeParcelableArray(mEndpoints, 0);
+        parcel.writeInt(id);
+        parcel.writeInt(alternateSetting);
+        parcel.writeString(name);
+        parcel.writeInt(interfaceClass);
+        parcel.writeInt(subclass);
+        parcel.writeInt(protocol);
+        parcel.writeParcelableArray(endpoints, 0);
     }
+
+    @NonNull
+    static UsbInterface fromNativeObject(@NonNull ByteBuffer nativeObject) {
+        // TODO: Loop through alternate settings and create interfaces for each
+        return null;
+    }
+
 }

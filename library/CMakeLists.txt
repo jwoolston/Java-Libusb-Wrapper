@@ -37,13 +37,15 @@ add_library(
     SHARED
 
     # Provides a relative path to your source file(s).
-    src/main/jni/usb_manager.c
+    src/main/jni/common.h
+    src/main/jni/libusb_device_descriptor.c
+    src/main/jni/libusb_error_enum.c
+    src/main/jni/logging.h
+    src/main/jni/usb_configuration.c
     src/main/jni/usb_device.c
     src/main/jni/usb_device_connection.c
-    src/main/jni/libusb_error_enum.c
-    src/main/jni/libusb_device_descriptor.c
-    src/main/jni/common.h
-    src/main/jni/logging.h
+    src/main/jni/usb_interface.c
+    src/main/jni/usb_manager.c
     ${libusb_SRCS}
 )
 
