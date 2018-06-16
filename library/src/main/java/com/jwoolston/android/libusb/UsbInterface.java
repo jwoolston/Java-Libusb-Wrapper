@@ -19,9 +19,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.jwoolston.android.libusb.util.Preconditions;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A class representing an interface on a {@link UsbDevice}. USB devices can have one or more interfaces, each one
@@ -44,11 +45,11 @@ public class UsbInterface implements Parcelable {
     /**
      * UsbInterface should only be instantiated by UsbManager implementation
      */
-    UsbInterface(int id, int alternateSetting, @Nullable String name, int Class, int subClass, int protocol) {
+    UsbInterface(int id, int alternateSetting, @Nullable String name, int interfaceClass, int subClass, int protocol) {
         this.id = id;
         this.alternateSetting = alternateSetting;
         this.name = name;
-        interfaceClass = Class;
+        this.interfaceClass = interfaceClass;
         subclass = subClass;
         this.protocol = protocol;
     }
@@ -185,10 +186,61 @@ public class UsbInterface implements Parcelable {
         parcel.writeParcelableArray(endpoints, 0);
     }
 
+    private static final int INDEX_INTERFACE_ID = 2;
+    private static final int INDEX_ALTERNATE_SETTING = 3;
+    private static final int INDEX_NUM_ENDPOINTS = 4;
+    private static final int INDEX_INTERFACE_CLASS = 5;
+    private static final int INDEX_INTERFACE_SUBCLASS = 6;
+    private static final int INDEX_INTERFACE_PROTOCOL = 7;
+    private static final int INDEX_INTERFACE_STRING_INDEX = 8;
+
     @NonNull
-    static UsbInterface fromNativeObject(@NonNull ByteBuffer nativeObject) {
+    static List<UsbInterface> fromNativeObject(@NonNull UsbDevice device, @NonNull ByteBuffer nativeInterface) {
         // TODO: Loop through alternate settings and create interfaces for each
-        return null;
+        final List<UsbInterface> interfaces = new ArrayList<>();
+        UsbInterface usbInterface = null;
+        do {
+            usbInterface = fromNativeDescriptor(device, nativeInterface, interfaces.size());
+            if (usbInterface != null) {
+                interfaces.add(usbInterface);
+            }
+        } while (usbInterface != null);
+        return interfaces;
     }
 
+    @Nullable
+    private static UsbInterface fromNativeDescriptor(@NonNull UsbDevice device, @NonNull ByteBuffer nativeObject,
+                                                     int index) {
+        final ByteBuffer nativeDescriptor = nativeGetInterfaceDescriptor(nativeObject, index);
+
+        if (nativeDescriptor == null) {
+            return null;
+        }
+
+        final int id = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_ID);
+        final int alternateSetting = 0xFF & nativeDescriptor.get(INDEX_ALTERNATE_SETTING);
+        final int numEndpoints = 0xFF & nativeDescriptor.get(INDEX_NUM_ENDPOINTS);
+        final int interfaceClass = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_CLASS);
+        final int subclass = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_SUBCLASS);
+        final int protocol = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_PROTOCOL);
+        final int stringIndex = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_STRING_INDEX);
+        final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
+        final UsbInterface usbInterface = new UsbInterface(id, alternateSetting, name, interfaceClass, subclass,
+                                                          protocol);
+        final UsbEndpoint[] endpoints = new UsbEndpoint[numEndpoints];
+        for (int i = 0; i < numEndpoints; ++i) {
+            final ByteBuffer nativeEndpoint = nativeGetEndpoint(nativeDescriptor, i);
+            if (nativeEndpoint != null) {
+                endpoints[i] = UsbEndpoint.fromNativeObject(nativeEndpoint);
+            }
+        }
+        usbInterface.setEndpoints(endpoints);
+        return usbInterface;
+    }
+
+    @Nullable
+    private static native ByteBuffer nativeGetInterfaceDescriptor(@NonNull ByteBuffer nativeObject, int index);
+
+    @Nullable
+    private static native ByteBuffer nativeGetEndpoint(@NonNull ByteBuffer nativeDescriptor, int index);
 }

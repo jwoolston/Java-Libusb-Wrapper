@@ -226,9 +226,8 @@ public class UsbDevice {
     }
 
     /**
-     * Returns the number of {@link UsbInterface}s this device contains.
-     * For devices with multiple configurations, you will probably want to use
-     * {@link UsbConfiguration#getInterfaceCount} instead.
+     * Returns the number of {@link UsbInterface}s this device contains. For devices with multiple configurations,
+     * you will probably want to use {@link UsbConfiguration#getInterfaceCount} instead.
      *
      * @return the number of interfaces
      */
@@ -237,9 +236,8 @@ public class UsbDevice {
     }
 
     /**
-     * Returns the {@link UsbInterface} at the given index.
-     * For devices with multiple configurations, you will probably want to use
-     * {@link UsbConfiguration#getInterface} instead.
+     * Returns the {@link UsbInterface} at the given index. For devices with multiple configurations, you will
+     * probably want to use {@link UsbConfiguration#getInterface} instead.
      *
      * @return the interface
      */
@@ -314,11 +312,11 @@ public class UsbDevice {
         return nativeObject;
     }
 
-    void populate(@NonNull UsbDeviceConnection usbConnection) {
+    void populate() {
         final int numConfigurations = nativeGetConfigurationCount(getNativeObject());
         final UsbConfiguration[] configurations = new UsbConfiguration[numConfigurations];
         for (int i = 0; i < numConfigurations; ++i) {
-            configurations[i] = UsbConfiguration.fromNativeObject(getNativeObject(), i);
+            configurations[i] = UsbConfiguration.fromNativeObject(this, i);
         }
         setConfigurations(configurations);
     }
@@ -326,6 +324,9 @@ public class UsbDevice {
     void setConfigurations(@NonNull UsbConfiguration[] configuration) {
         configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
     }
+
+    @Nullable
+    static native String nativeGetStringDescriptor(@NonNull ByteBuffer device, int index);
 
     @Nullable
     private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);

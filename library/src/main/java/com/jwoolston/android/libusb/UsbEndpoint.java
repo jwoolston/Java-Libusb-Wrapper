@@ -17,6 +17,8 @@ package com.jwoolston.android.libusb;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import java.nio.ByteBuffer;
 
 /**
  * A class representing an endpoint on a {@link UsbInterface}. Endpoints are the channels for sending and receiving
@@ -145,5 +147,18 @@ public class UsbEndpoint implements Parcelable {
         parcel.writeInt(attributes);
         parcel.writeInt(maxPacketSize);
         parcel.writeInt(interval);
+    }
+
+    private static final int INDEX_ADDRESS = 2;
+    private static final int INDEX_ATTRIBUTES = 3;
+    private static final int INDEX_MAX_PACKET_SIZE = 4;
+    private static final int INDEX_INTERVAL = 6;
+
+    static UsbEndpoint fromNativeObject(@NonNull ByteBuffer nativeObject) {
+        final int address = 0xFF & nativeObject.get(INDEX_ADDRESS);
+        final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
+        final int maxPacketSize = 0xFFFF & nativeObject.getShort(INDEX_MAX_PACKET_SIZE);
+        final int interval = 0xFF & nativeObject.get(INDEX_INTERVAL);
+        return new UsbEndpoint(address, attributes, maxPacketSize, interval);
     }
 }

@@ -8,32 +8,29 @@
 
 #define  LOG_TAG    "UsbInterface-Native"
 
-/*JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetConfiguration(JNIEnv *env, jclass type, jobject device,
-                                                                          jint configuration) {
-    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
-                                                                                                               device);
-    struct libusb_config_descriptor *config;
-    int retval = libusb_get_config_descriptor(deviceHandle, configuration, &config);
-    if (retval) {
-        LOGE("Error fetching configuration descriptor: %s", libusb_strerror(retval));
+JNIEXPORT jobject JNICALL
+Java_com_jwoolston_android_libusb_UsbInterface_nativeGetInterfaceDescriptor(JNIEnv *env, jclass type,
+                                                                            jobject nativeObject, jint index) {
+    struct libusb_interface *interface = (struct libusb_interface *) (*env)->GetDirectBufferAddress(env, nativeObject);
+
+    if (index >= interface->num_altsetting) {
         return NULL;
     }
-    return ((*env)->NewDirectByteBuffer(env, (void *) config, sizeof(struct libusb_config_descriptor)));
+
+    const struct libusb_interface_descriptor descriptor = interface->altsetting[index];
+    return ((*env)->NewDirectByteBuffer(env, (void *) &descriptor, sizeof(struct libusb_interface_descriptor)));
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetInterface(JNIEnv *env, jclass type, jobject nativeObject,
-                                                                      jint interfaceIndex) {
-    struct libusb_config_descriptor *config = (struct libusb_config_descriptor *)
-            (*env)->GetDirectBufferAddress(env, nativeObject);
-    const struct libusb_interface interface = config->interface[interfaceIndex];
-    return ((*env)->NewDirectByteBuffer(env, (void *) &interface, sizeof(struct libusb_interface)));
-}
+Java_com_jwoolston_android_libusb_UsbInterface_nativeGetEndpoint(JNIEnv *env, jclass type, jobject nativeDescriptor,
+                                                                 jint index) {
+    struct libusb_interface_descriptor *descriptor = (struct libusb_interface_descriptor *)
+            (*env)->GetDirectBufferAddress(env, nativeDescriptor);
 
-JNIEXPORT void JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeDestroy(JNIEnv *env, jclass type, jobject nativeObject) {
-    struct libusb_config_descriptor *config = (struct libusb_config_descriptor *)
-            (*env)->GetDirectBufferAddress(env, nativeObject);
-    libusb_free_config_descriptor(config);
-}*/
+    if (index >= descriptor->bNumEndpoints) {
+        return NULL;
+    }
+
+    const struct libusb_endpoint_descriptor endpoint = descriptor->endpoint[index];
+    return ((*env)->NewDirectByteBuffer(env, (void *) &endpoint, sizeof(struct libusb_endpoint_descriptor)));
+}

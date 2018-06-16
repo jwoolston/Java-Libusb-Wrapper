@@ -19,9 +19,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.jwoolston.android.libusb.util.Preconditions;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A class representing a configuration on a {@link UsbDevice}. A USB configuration can have one or more interfaces,
@@ -187,28 +188,28 @@ public class UsbConfiguration implements Parcelable {
     private static final int INDEX_MAX_POWER = 8;
 
     @NonNull
-    static UsbConfiguration fromNativeObject(@NonNull ByteBuffer device, int configuration) {
-        final ByteBuffer nativeObject = nativeGetConfiguration(device, configuration);
+    static UsbConfiguration fromNativeObject(@NonNull UsbDevice device, int configuration) {
+        // Get the native configuration object. Make sure you free it!
+        final ByteBuffer nativeObject = nativeGetConfiguration(device.getNativeObject(), configuration);
         final int numberInterfaces = 0xFF & nativeObject.get(INDEX_NUMBER_INTERFACES);
         final int id = 0xFF & nativeObject.get(INDEX_CONFIGURATION_VALUE);
         final int stringIndex = 0xFF & nativeObject.get(INDEX_CONFIGURATION_STRING_INDEX);
         final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
         final int maxPower = 0xFF & nativeObject.get(INDEX_MAX_POWER);
-        final String name = nativeGetConfigurationName(nativeObject, stringIndex);
+        final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
         final UsbConfiguration usbConfiguration = new UsbConfiguration(id, name, attributes, maxPower);
-        final UsbInterface[] usbInterfaces = new UsbInterface[numberInterfaces];
+        final List<UsbInterface> usbInterfaces = new ArrayList<>();
         for (int i = 0; i < numberInterfaces; ++i) {
-            UsbInterface usbInterface = UsbInterface.fromNativeObject(nativeGetInterface(nativeObject, i));
-            usbInterfaces[i] = usbInterface;
+            usbInterfaces.addAll(UsbInterface.fromNativeObject(device, nativeGetInterface(nativeObject, i)));
         }
-        usbConfiguration.setInterfaces(usbInterfaces);
+        usbConfiguration.setInterfaces(usbInterfaces.toArray(new UsbInterface[0]));
+
+        // Destroy the native configuration object
         nativeDestroy(nativeObject);
         return usbConfiguration;
     }
 
     private static native ByteBuffer nativeGetConfiguration(@NonNull ByteBuffer device, int configuration);
-
-    private static native String nativeGetConfigurationName(@NonNull ByteBuffer device, int stringIndex);
 
     private static native ByteBuffer nativeGetInterface(@NonNull ByteBuffer nativeObject, int interfaceIndex);
 

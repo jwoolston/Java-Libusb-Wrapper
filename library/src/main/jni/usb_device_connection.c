@@ -113,19 +113,6 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *
     return ((result == 0) ? transfered : result);
 }
 
-JNIEXPORT jstring JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetConfigurationName(JNIEnv *env, jclass type,
-                                                                              jobject device, jint stringIndex) {
-    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
-                                                                                                               device);
-    size_t length = 50 * sizeof(unsigned char);
-    unsigned char *name = malloc(length);
-    libusb_get_string_descriptor_ascii(deviceHandle, stringIndex, name, length);
-    jstring retval = (*env)->NewStringUTF(env, (const char *) name);
-    free(name);
-    return retval;
-}
-
 JNIEXPORT jint JNICALL
 Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeResetDevice(JNIEnv *env, jobject instance, jobject device) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,

@@ -6,6 +6,19 @@
 
 #define  LOG_TAG    "UsbDevice-Native"
 
+JNIEXPORT jstring JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetStringDescriptor(JNIEnv *env, jclass type, jobject device,
+                                                                      jint index) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    size_t length = 50 * sizeof(unsigned char);
+    unsigned char *name = malloc(length);
+    libusb_get_string_descriptor_ascii(deviceHandle, index, name, length);
+    jstring retval = (*env)->NewStringUTF(env, (const char *) name);
+    free(name);
+    return retval;
+}
+
 JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type, jobject context, jint fd) {
     LOGD("Wrapping USB Device Handle.");

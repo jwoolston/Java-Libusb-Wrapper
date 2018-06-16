@@ -81,7 +81,7 @@ public class UsbManager {
             localDeviceCache.put(key, usbDevice);
             localConnectionCache.put(key, usbConnection);
 
-            usbDevice.populate(usbConnection);
+            usbDevice.populate();
             return usbConnection;
         }
     }
