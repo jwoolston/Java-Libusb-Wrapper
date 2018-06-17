@@ -13,7 +13,8 @@ cmake_minimum_required(VERSION 3.4.1)
 include_directories(
     libusb/android
     libusb/libusb
-    libusb/libusb/os)
+    libusb/libusb/os
+    src/main/jni)
 
 # Defines the source code for the library
 set(libusb_SRCS
@@ -37,6 +38,7 @@ add_library(
     SHARED
 
     # Provides a relative path to your source file(s).
+    src/main/jni/async_usb_thread.c
     src/main/jni/common.h
     src/main/jni/libusb_device_descriptor.c
     src/main/jni/libusb_error_enum.c

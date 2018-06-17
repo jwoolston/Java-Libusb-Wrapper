@@ -4,7 +4,7 @@
 
 #include <unistd.h>
 #include <string.h>
-#include "common.h"
+#include <common.h>
 
 #define  LOG_TAG    "UsbInterface-Native"
 

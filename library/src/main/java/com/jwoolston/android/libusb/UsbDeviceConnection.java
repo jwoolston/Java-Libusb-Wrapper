@@ -19,6 +19,8 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.jwoolston.android.libusb.async.ControlTransferCallback;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -33,6 +35,12 @@ public class UsbDeviceConnection {
     private final UsbDevice  device;
 
     private Context context;
+
+    static void initialize() {
+        if (!nativeInitialize()) {
+            throw new RuntimeException("Failed to initialize native layer for UsbDeviceConnection.");
+        }
+    }
 
     @NonNull
     static UsbDeviceConnection fromAndroidConnection(@NonNull Context context, @NonNull UsbManager manager,
@@ -63,6 +71,7 @@ public class UsbDeviceConnection {
      * instance to reestablish communication with the device.
      */
     public void close() {
+        manager.onClosingDevice();
         nativeClose(device.getNativeObject());
         manager.unregisterDevice(device);
     }
@@ -256,6 +265,58 @@ public class UsbDeviceConnection {
     }
 
     /**
+     * Performs an asynchronous control transaction on endpoint zero for this device. The direction of the transfer is
+     * determined by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
+     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
+     * then the transfer is a read.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #controlTransferAsync(ControlTransferCallback, int, int, int, int, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param requestType request type for this transaction
+     * @param request     request ID for this transaction
+     * @param value       value field for this transaction
+     * @param index       index field for this transaction
+     * @param buffer      buffer for data portion of transaction,
+     *                    or null if no data needs to be sent or received
+     * @param length      the length of the data to send or receive
+     * @param timeout     in milliseconds
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
+                                    int index, byte[] buffer, int length, int timeout) {
+        return controlTransferAsync(callback, requestType, request, value, index, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous control transaction on endpoint zero for this device. The direction of the transfer is
+     * determined by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
+     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
+     * then the transfer is a read.
+     *
+     * @param requestType request type for this transaction
+     * @param request     request ID for this transaction
+     * @param value       value field for this transaction
+     * @param index       index field for this transaction
+     * @param buffer      buffer for data portion of transaction,
+     *                    or null if no data needs to be sent or received
+     * @param offset      the index of the first byte in the buffer to send or receive
+     * @param length      the length of the data to send or receive
+     * @param timeout     in milliseconds
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
+                                    int index, byte[] buffer, int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        final int result = nativeControlRequestAsync(device, callback, requestType, request, value, index, buffer,
+            offset, length, timeout);
+        return result;
+    }
+
+    /**
      * Reset USB port for the connected device.
      *
      * @return {@link LibusbError} The libusb result.
@@ -281,6 +342,8 @@ public class UsbDeviceConnection {
         }
     }
 
+    private static native boolean nativeInitialize();
+
     private native void nativeClose(@NonNull ByteBuffer device);
 
     @Nullable
@@ -296,6 +359,10 @@ public class UsbDeviceConnection {
 
     private native int nativeControlRequest(@NonNull ByteBuffer device, int requestType, int request, int value,
                                             int index, byte[] buffer, int offset, int length, int timeout);
+
+    private native int nativeControlRequestAsync(@NonNull UsbDevice device, @NonNull ControlTransferCallback callback,
+                                                 int requestType, int request, int value, int index, byte[] buffer,
+                                                 int offset, int length, int timeout);
 
     private native int nativeBulkRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
                                          int length, int timeout);

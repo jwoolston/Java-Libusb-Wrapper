@@ -2,7 +2,7 @@
 // Created by Jared Woolston (Jared.Woolston@gmail.com)
 //
 
-#include "common.h"
+#include <common.h>
 
 JNIEXPORT jstring JNICALL
 Java_com_jwoolston_android_libusb_LibusbError_getDescriptionString(JNIEnv *env, jclass type, jint code) {
