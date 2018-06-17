@@ -48,7 +48,7 @@ public class UsbManager {
     private final HashMap<String, UsbDeviceConnection> localConnectionCache = new HashMap<>();
     private final LibUsbContext libUsbContext;
 
-    private AsyncUSBThread asyncUsbThread;
+    private volatile AsyncUSBThread asyncUsbThread;
 
     @Nullable
     private native ByteBuffer nativeInitialize();
@@ -141,6 +141,13 @@ public class UsbManager {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    void startAsyncIfNeeded() {
+        if (asyncUsbThread == null) {
+            asyncUsbThread = new AsyncUSBThread(libUsbContext);
+            asyncUsbThread.start();
         }
     }
 }

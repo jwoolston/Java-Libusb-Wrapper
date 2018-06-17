@@ -4,18 +4,32 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 #include <common.h>
 
 #define  LOG_TAG    "UsbDeviceConnection-Native"
 
 static jmethodID controlCallback;
 static jmethodID bulkCallback;
+static jmethodID interruptCallback;
 
 struct transfer_callback_holder {
     jobject *callback;
 
     JavaVM *vm;
+
+    bool cleanup;
 };
+
+static struct transfer_callback_holder *allocate_callback_holder(jobject *callback, JNIEnv *env, bool cleanup) {
+    struct transfer_callback_holder *holder = malloc(sizeof(struct transfer_callback_holder));
+    holder->callback = callback;
+    JavaVM *vm;
+    (*env)->GetJavaVM(env, &vm);
+    holder->vm = vm;
+    holder->cleanup = cleanup;
+    return holder;
+}
 
 static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfer) {
     int result;
@@ -78,7 +92,7 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
                 (*env)->CallVoidMethod(env, callback, controlCallback, byteBuffer, result);
                 break;
             }
-            case LIBUSB_TRANSFER_TYPE_BULK:
+            case LIBUSB_TRANSFER_TYPE_BULK: {
                 if ((transfer->endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
                     data = malloc(transfer->actual_length * sizeof(unsigned char));
                     memcpy(data, transfer->buffer, transfer->actual_length);
@@ -91,8 +105,21 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
                 libusb_free_transfer(transfer);
                 (*env)->CallVoidMethod(env, callback, bulkCallback, byteBuffer, result);
                 break;
-            case LIBUSB_TRANSFER_TYPE_INTERRUPT:
+            }
+            case LIBUSB_TRANSFER_TYPE_INTERRUPT: {
+                if ((transfer->endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
+                    data = malloc(transfer->actual_length * sizeof(unsigned char));
+                    memcpy(data, transfer->buffer, transfer->actual_length);
+                    // We don't free the buffer here because we expect libusb to do it with basic interrupt transfers
+                    (*env)->NewDirectByteBuffer(env, data, transfer->actual_length);
+                }
+                jobject callback = holder->callback;
+                // We must always free our callback holder
+                free(holder);
+                libusb_free_transfer(transfer);
+                (*env)->CallVoidMethod(env, callback, interruptCallback, byteBuffer, result);
                 break;
+            }
             case LIBUSB_TRANSFER_TYPE_ISOCHRONOUS:
                 break;
             default:
@@ -127,6 +154,18 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInitialize(JNIEnv *e
     bulkCallback = (*env)->GetMethodID(env, clazz, "onBulkTransferComplete", "(Ljava/nio/ByteBuffer;I)V");
     if (controlCallback == NULL) {
         LOGE("Failed to find onBulkTransferComplete(ByteBuffer, int) method.");
+        return JNI_FALSE;
+    }
+
+    // Find the interrupt transfer callback method
+    clazz = (*env)->FindClass(env, "com/jwoolston/android/libusb/async/InterruptTransferCallback");
+    if (clazz == NULL) {
+        LOGE("Failed to find class com.jwoolston.android.libusb.async.InterruptTransferCallback");
+        return JNI_FALSE;
+    }
+    interruptCallback = (*env)->GetMethodID(env, clazz, "onInterruptTransferComplete", "(Ljava/nio/ByteBuffer;I)V");
+    if (controlCallback == NULL) {
+        LOGE("Failed to find onInterruptTransferComplete(ByteBuffer, int) method.");
         return JNI_FALSE;
     }
     return JNI_TRUE;
@@ -259,11 +298,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequestAsync(
                               (uint16_t) (0xFFFF & value), (uint16_t) (0xFFFF & index), (uint16_t) (0xFFFF & length));
 
     // Populate the transfer structure
-    struct transfer_callback_holder *holder = malloc(sizeof(struct transfer_callback_holder));
-    holder->callback = callback;
-    JavaVM *vm;
-    (*env)->GetJavaVM(env, &vm);
-    holder->vm = vm;
+    struct transfer_callback_holder *holder = allocate_callback_holder(callback, env, true);
 
     libusb_fill_control_transfer(transfer, deviceHandle, userData, libusb_transfer_callback, holder,
                                  (unsigned int) timeout);
@@ -327,11 +362,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequestAsync(JNI
     }
 
     // Populate the transfer structure
-    struct transfer_callback_holder *holder = malloc(sizeof(struct transfer_callback_holder));
-    holder->callback = callback;
-    JavaVM *vm;
-    (*env)->GetJavaVM(env, &vm);
-    holder->vm = vm;
+    struct transfer_callback_holder *holder = allocate_callback_holder(callback, env, true);
 
     libusb_fill_bulk_transfer(transfer, deviceHandle, address, userData, length, libusb_transfer_callback, holder,
                               timeout);
@@ -361,6 +392,53 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequest(JNI
         (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
     }
     return ((result == 0) ? transfered : result);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequestAsync(JNIEnv *env, jobject instance,
+                                                                                  jobject callback,
+                                                                                  jobject device, jint address,
+                                                                                  jbyteArray buffer_, jint offset,
+                                                                                  jint length, jint timeout) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    if (usbi_handling_events(HANDLE_CTX(deviceHandle))) {
+        return LIBUSB_ERROR_BUSY;
+    }
+
+    // Allocate the transfer
+    struct libusb_transfer *transfer = libusb_alloc_transfer(0);
+    jbyte *buffer = NULL;
+
+    unsigned char *userData = (unsigned char *) malloc((length) * sizeof(unsigned char));
+    if (!userData) {
+        libusb_free_transfer(transfer);
+        return LIBUSB_ERROR_NO_MEM;
+    }
+
+    // Fill the data buffer if outgoing transfer
+    if ((address & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT) {
+        if (buffer_) {
+            buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
+        }
+        memcpy(buffer + offset, userData, length);
+        if (buffer) {
+            (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
+        }
+    }
+
+    // Populate the transfer structure
+    struct transfer_callback_holder *holder = allocate_callback_holder(callback, env, true);
+
+    libusb_fill_interrupt_transfer(transfer, deviceHandle, address, userData, length, libusb_transfer_callback, holder,
+                                   timeout);
+    transfer->type = LIBUSB_TRANSFER_TYPE_INTERRUPT;
+    // Submit the transfer
+    int result = libusb_submit_transfer(transfer);
+    if (result < 0) {
+        libusb_free_transfer(transfer);
+        return result;
+    }
 }
 
 JNIEXPORT jint JNICALL
