@@ -114,6 +114,25 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *
 }
 
 JNIEXPORT jint JNICALL
+Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequest(JNIEnv *env, jobject instance,
+                                                                             jobject device, jint endpoint,
+                                                                             jbyteArray buffer_, jint offset,
+                                                                             jint length, jint timeout) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    jbyte *buffer = NULL;
+    if (buffer_) {
+        buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
+    }
+    jint transfered;
+    jint result = libusb_interrupt_transfer(deviceHandle, endpoint, buffer + offset, length, &transfered, timeout);
+    if (buffer) {
+        (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
+    }
+    return ((result == 0) ? transfered : result);
+}
+
+JNIEXPORT jint JNICALL
 Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeResetDevice(JNIEnv *env, jobject instance, jobject device) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);

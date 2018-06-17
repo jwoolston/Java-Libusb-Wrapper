@@ -219,6 +219,43 @@ public class UsbDeviceConnection {
     }
 
     /**
+     * Performs an interrupt transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #interruptTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive; can be {@code null} to wait for next
+     *                 transaction without reading data
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int interruptTransfer(UsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
+        return interruptTransfer(endpoint, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an interrupt transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
+     *
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive
+     * @param offset   the index of the first byte in the buffer to send or receive
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int interruptTransfer(UsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        return nativeInterruptRequest(device.getNativeObject(), endpoint.getAddress(), buffer, offset, length, timeout);
+    }
+
+    /**
      * Reset USB port for the connected device.
      *
      * @return {@link LibusbError} The libusb result.
@@ -262,6 +299,9 @@ public class UsbDeviceConnection {
 
     private native int nativeBulkRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
                                          int length, int timeout);
+
+    private native int nativeInterruptRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
+                                              int length, int timeout);
 
     private native int nativeResetDevice(@NonNull ByteBuffer device);
 }
