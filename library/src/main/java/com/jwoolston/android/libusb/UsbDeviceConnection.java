@@ -19,6 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.jwoolston.android.libusb.async.BulkTransferCallback;
 import com.jwoolston.android.libusb.async.ControlTransferCallback;
 
 import java.nio.ByteBuffer;
@@ -265,6 +266,46 @@ public class UsbDeviceConnection {
     }
 
     /**
+     * Performs an asyncronous bulk transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #bulkTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive; can be {@code null} to wait for next
+     *                 transaction without reading data
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+                                 int length, int timeout) {
+        return bulkTransferAsync(callback, endpoint, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous bulk transaction on the given endpoint. The direction of the transfer is determined by
+     * the direction of the endpoint.
+     *
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive
+     * @param offset   the index of the first byte in the buffer to send or receive
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+                                 int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        return nativeBulkRequestAsync(device.getNativeObject(), callback, endpoint.getAddress(), buffer, offset,
+            length, timeout);
+    }
+
+    /**
      * Performs an asynchronous control transaction on endpoint zero for this device. The direction of the transfer is
      * determined by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
      * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
@@ -311,8 +352,8 @@ public class UsbDeviceConnection {
     public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
                                     int index, byte[] buffer, int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
-        final int result = nativeControlRequestAsync(device, callback, requestType, request, value, index, buffer,
-            offset, length, timeout);
+        final int result = nativeControlRequestAsync(device.getNativeObject(), callback, requestType, request, value,
+            index, buffer, offset, length, timeout);
         return result;
     }
 
@@ -360,9 +401,12 @@ public class UsbDeviceConnection {
     private native int nativeControlRequest(@NonNull ByteBuffer device, int requestType, int request, int value,
                                             int index, byte[] buffer, int offset, int length, int timeout);
 
-    private native int nativeControlRequestAsync(@NonNull UsbDevice device, @NonNull ControlTransferCallback callback,
+    private native int nativeControlRequestAsync(@NonNull ByteBuffer device, @NonNull ControlTransferCallback callback,
                                                  int requestType, int request, int value, int index, byte[] buffer,
                                                  int offset, int length, int timeout);
+
+    private native int nativeBulkRequestAsync(@NonNull ByteBuffer device, @NonNull BulkTransferCallback callback,
+                                              int address, byte[] buffer, int offset, int length, int timeout);
 
     private native int nativeBulkRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
                                          int length, int timeout);
