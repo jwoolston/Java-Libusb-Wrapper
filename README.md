@@ -42,3 +42,10 @@ Due to the NDK requirement, building this project will require you to have the A
 After setting up the NDK, you will need to reference it in your version of `local.properties` by declaring `ndk.dir`.
 
 Following this, the project should build successfully.
+
+## Open Source Credits
+Testing of a number of features in the `library` module is done against the USB MSC class primarily because they are _relatively_ simple and provide a large
+data source/sink with reasonable speed capabilities. To save the effort of developing the boiler plate code needed to issue the SCSI commands to these devices,
+a module (`msc_test_core`) is included which contains a modified copy of of [libaums](https://github.com/magnusja/libaums) by GitHub user [magnusja](https://github.com/magnusja).
+This library was not used as is primarily because it utilizes the Android USB APIs internally and for testing we want to use the APIs provided by this library. The change in package
+name is exclusively because I do not wish to in any way conflict with his namespace, either intentionally or accidentally.
