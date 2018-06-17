@@ -80,6 +80,8 @@ public class UsbManager {
                                                                                                 usbDevice);
             localDeviceCache.put(key, usbDevice);
             localConnectionCache.put(key, usbConnection);
+
+            usbDevice.populate();
             return usbConnection;
         }
     }

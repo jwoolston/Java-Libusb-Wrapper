@@ -6,6 +6,8 @@
 #include <string.h>
 #include "common.h"
 
+#define  LOG_TAG    "UsbDeviceConnection-Native"
+
 JNIEXPORT void JNICALL
 Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClose(JNIEnv *env, jobject instance, jobject device) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,

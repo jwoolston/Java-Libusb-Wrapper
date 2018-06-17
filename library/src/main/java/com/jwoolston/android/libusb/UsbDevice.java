@@ -16,12 +16,12 @@ package com.jwoolston.android.libusb;
  * limitations under the License.
  */
 
+import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
+import android.util.Log;
 import com.jwoolston.android.libusb.util.Preconditions;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -35,10 +35,9 @@ import java.nio.ByteBuffer;
  * used for control requests on endpoint zero.
  * <p>
  */
-public class UsbDevice {
+public class UsbDevice implements Parcelable {
 
     private static final String TAG = "UsbDevice";
-    private static final boolean DEBUG = false;
 
     @NonNull
     private final android.hardware.usb.UsbDevice device;
@@ -71,49 +70,13 @@ public class UsbDevice {
     @Nullable
     private UsbInterface[] interfaces;
 
-    @Nullable
-    private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);
-
-    private native String nativeGetManufacturerString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
-
-    private native String nativeGetProductNameString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
-
-    private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
-
-    @NonNull
-    static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, @NonNull android.hardware.usb.UsbDevice device,
-                                       @NonNull android.hardware.usb.UsbDeviceConnection connection) {
-        return new UsbDevice(connection, device, wrapDevice(context.getNativeObject(), connection.getFileDescriptor()));
-    }
-
-    private UsbDevice(@NonNull android.hardware.usb.UsbDeviceConnection connection,
-                      @NonNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
-        Preconditions.checkNotNull(nativeObject, "UsbDevice initialization failed.");
-        this.nativeObject = nativeObject;
-        this.device = device;
-        name = device.getDeviceName();
-        vendorId = device.getVendorId();
-        productId = device.getProductId();
-        deviceClass = device.getDeviceClass();
-        subclass = device.getDeviceSubclass();
-        protocol = device.getDeviceProtocol();
-
-        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
-        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
-        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
-        version = nativeGetDeviceVersion(descriptor.getNativeObject());
-        serialNumber = connection.getSerial();
-
-        fileDescriptor = connection.getFileDescriptor();
-    }
-
-    @NonNull
-    ByteBuffer getNativeObject() {
-        return nativeObject;
-    }
-
     public int getFileDescriptor() {
         return fileDescriptor;
+    }
+
+    @NonNull
+    public android.hardware.usb.UsbDevice getAndroidDevice() {
+        return device;
     }
 
     /**
@@ -265,9 +228,8 @@ public class UsbDevice {
     }
 
     /**
-     * Returns the number of {@link UsbInterface}s this device contains.
-     * For devices with multiple configurations, you will probably want to use
-     * {@link UsbConfiguration#getInterfaceCount} instead.
+     * Returns the number of {@link UsbInterface}s this device contains. For devices with multiple configurations,
+     * you will probably want to use {@link UsbConfiguration#getInterfaceCount} instead.
      *
      * @return the number of interfaces
      */
@@ -276,24 +238,14 @@ public class UsbDevice {
     }
 
     /**
-     * Returns the {@link UsbInterface} at the given index.
-     * For devices with multiple configurations, you will probably want to use
-     * {@link UsbConfiguration#getInterface} instead.
+     * Returns the {@link UsbInterface} at the given index. For devices with multiple configurations, you will
+     * probably want to use {@link UsbConfiguration#getInterface} instead.
      *
      * @return the interface
      */
     public @NonNull
     UsbInterface getInterface(int index) {
         return getInterfaceList()[index];
-    }
-
-    /**
-     * Only used by UsbService implementation
-     *
-     * @hide
-     */
-    public void setConfigurations(@NonNull UsbConfiguration[] configuration) {
-        configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
     }
 
     @Override
@@ -329,4 +281,129 @@ public class UsbDevice {
         builder.append("]");
         return builder.toString();
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(nativeGetPointerFromNativeObject(getNativeObject()));
+        dest.writeParcelable(device, flags);
+        dest.writeString(name);
+        dest.writeString(manufacturerName);
+        dest.writeString(productName);
+        dest.writeString(version);
+        dest.writeString(serialNumber);
+        dest.writeInt(vendorId);
+        dest.writeInt(productId);
+        dest.writeInt(deviceClass);
+        dest.writeInt(subclass);
+        dest.writeInt(protocol);
+        dest.writeInt(fileDescriptor);
+        dest.writeTypedArray(configurations, flags);
+        dest.writeTypedArray(interfaces, flags);
+    }
+
+    public static final Creator<UsbDevice> CREATOR = new Creator<UsbDevice>() {
+        @Override
+        public UsbDevice createFromParcel(Parcel in) {
+            return new UsbDevice(in);
+        }
+
+        @Override
+        public UsbDevice[] newArray(int size) {
+            return new UsbDevice[size];
+        }
+    };
+
+    @NonNull
+    static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, @NonNull android.hardware.usb.UsbDevice device,
+                                       @NonNull android.hardware.usb.UsbDeviceConnection connection) {
+        return new UsbDevice(connection, device, wrapDevice(context.getNativeObject(), connection.getFileDescriptor()));
+    }
+
+    private UsbDevice(@NonNull android.hardware.usb.UsbDeviceConnection connection,
+                      @NonNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
+        Preconditions.checkNotNull(nativeObject, "UsbDevice initialization failed.");
+        this.nativeObject = nativeObject;
+        this.device = device;
+        name = device.getDeviceName();
+        vendorId = device.getVendorId();
+        productId = device.getProductId();
+        deviceClass = device.getDeviceClass();
+        subclass = device.getDeviceSubclass();
+        protocol = device.getDeviceProtocol();
+
+        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
+        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
+        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
+        version = nativeGetDeviceVersion(descriptor.getNativeObject());
+        serialNumber = connection.getSerial();
+
+        fileDescriptor = connection.getFileDescriptor();
+    }
+
+    protected UsbDevice(Parcel in) {
+        final ByteBuffer buffer = nativeGetNativeObjectFromPointer(in.readLong());
+        if (buffer == null) {
+            throw new IllegalStateException("Received a null reference for the native object. Creation from "
+                                            + "parcel failed.");
+        }
+        nativeObject = buffer;
+        device = in.readParcelable(android.hardware.usb.UsbDevice.class.getClassLoader());
+        name = in.readString();
+        manufacturerName = in.readString();
+        productName = in.readString();
+        version = in.readString();
+        serialNumber = in.readString();
+        vendorId = in.readInt();
+        productId = in.readInt();
+        deviceClass = in.readInt();
+        subclass = in.readInt();
+        protocol = in.readInt();
+        fileDescriptor = in.readInt();
+        configurations = in.createTypedArray(UsbConfiguration.CREATOR);
+        interfaces = in.createTypedArray(UsbInterface.CREATOR);
+    }
+
+    @NonNull
+    ByteBuffer getNativeObject() {
+        return nativeObject;
+    }
+
+    void populate() {
+        final int numConfigurations = nativeGetConfigurationCount(getNativeObject());
+        final UsbConfiguration[] configurations = new UsbConfiguration[numConfigurations];
+        for (int i = 0; i < numConfigurations; ++i) {
+            configurations[i] = UsbConfiguration.fromNativeObject(this, i);
+        }
+        setConfigurations(configurations);
+    }
+
+    void setConfigurations(@NonNull UsbConfiguration[] configuration) {
+        configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
+    }
+
+    @Nullable
+    static native String nativeGetStringDescriptor(@NonNull ByteBuffer device, int index);
+
+    @Nullable
+    private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);
+
+    private native String nativeGetManufacturerString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
+
+    private native String nativeGetProductNameString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
+
+    private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
+
+    private native int nativeGetConfigurationCount(@NonNull ByteBuffer device);
+
+    private native long nativeGetPointerFromNativeObject(@NonNull ByteBuffer device);
+
+    @Nullable
+    private native ByteBuffer nativeGetNativeObjectFromPointer(long pointer);
+
+
 }

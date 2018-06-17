@@ -19,53 +19,48 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.jwoolston.android.libusb.util.Preconditions;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * A class representing a configuration on a {@link UsbDevice}.
- * A USB configuration can have one or more interfaces, each one providing a different
- * piece of functionality, separate from the other interfaces.
- * An interface will have one or more {@link UsbEndpoint}s, which are the
- * channels by which the host transfers data with the device.
- * <p>
- * <div class="special reference">
- * <h3>Developer Guides</h3>
- * <p>For more information about communicating with USB hardware, read the
- * <a href="{@docRoot}guide/topics/usb/index.html">USB</a> developer guide.</p>
- * </div>
+ * A class representing a configuration on a {@link UsbDevice}. A USB configuration can have one or more interfaces,
+ * each one providing a different piece of functionality, separate from the other interfaces. An interface will have
+ * one or more {@link UsbEndpoint}s, which are the channels by which the host transfers data with the device.
  */
 public class UsbConfiguration implements Parcelable {
 
     /**
      * Mask for "self-powered" bit in the configuration's attributes.
      */
-    private static final int ATTR_SELF_POWERED = 1 << 6;
+    private static final int ATTR_SELF_POWERED  = 1 << 6;
+
     /**
      * Mask for "remote wakeup" bit in the configuration's attributes.
      */
     private static final int ATTR_REMOTE_WAKEUP = 1 << 5;
 
-    private final int mId;
+    private final int    id;
     @Nullable
-    private final String mName;
-    private final int mAttributes;
-    private final int mMaxPower;
+    private final String name;
+    private final int    attributes;
+    private final int    maxPower;
 
-    /** All interfaces for this config, only null during creation */
+    /**
+     * All interfaces for this config, only null during creation
+     */
     @Nullable
-    private Parcelable[] mInterfaces;
+    private Parcelable[] interfaces;
 
     /**
      * UsbConfiguration should only be instantiated by UsbService implementation
-     *
-     * @hide
      */
     public UsbConfiguration(int id, @Nullable String name, int attributes, int maxPower) {
-        mId = id;
-        mName = name;
-        mAttributes = attributes;
-        mMaxPower = maxPower;
+        this.id = id;
+        this.name = name;
+        this.attributes = attributes;
+        this.maxPower = maxPower;
     }
 
     /**
@@ -75,7 +70,7 @@ public class UsbConfiguration implements Parcelable {
      * @return the configuration's ID
      */
     public int getId() {
-        return mId;
+        return id;
     }
 
     /**
@@ -85,7 +80,7 @@ public class UsbConfiguration implements Parcelable {
      */
     public @Nullable
     String getName() {
-        return mName;
+        return name;
     }
 
     /**
@@ -95,7 +90,7 @@ public class UsbConfiguration implements Parcelable {
      * @return the configuration's self-powered attribute
      */
     public boolean isSelfPowered() {
-        return (mAttributes & ATTR_SELF_POWERED) != 0;
+        return (attributes & ATTR_SELF_POWERED) != 0;
     }
 
     /**
@@ -105,7 +100,7 @@ public class UsbConfiguration implements Parcelable {
      * @return the configuration's remote-wakeup attribute
      */
     public boolean isRemoteWakeup() {
-        return (mAttributes & ATTR_REMOTE_WAKEUP) != 0;
+        return (attributes & ATTR_REMOTE_WAKEUP) != 0;
     }
 
     /**
@@ -114,7 +109,7 @@ public class UsbConfiguration implements Parcelable {
      * @return the configuration's max power
      */
     public int getMaxPower() {
-        return mMaxPower * 2;
+        return maxPower * 2;
     }
 
     /**
@@ -123,7 +118,7 @@ public class UsbConfiguration implements Parcelable {
      * @return the number of endpoints
      */
     public int getInterfaceCount() {
-        return mInterfaces.length;
+        return interfaces.length;
     }
 
     /**
@@ -133,58 +128,90 @@ public class UsbConfiguration implements Parcelable {
      */
     public @NonNull
     UsbInterface getInterface(int index) {
-        return (UsbInterface) mInterfaces[index];
+        return (UsbInterface) interfaces[index];
     }
 
     /**
      * Only used by UsbService implementation
-     *
-     * @hide
      */
     public void setInterfaces(@NonNull Parcelable[] interfaces) {
-        mInterfaces = Preconditions.checkArrayElementsNotNull(interfaces, "interfaces");
+        this.interfaces = Preconditions.checkArrayElementsNotNull(interfaces, "interfaces");
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("UsbConfiguration[mId=" + mId +
-            ",mName=" + mName + ",mAttributes=" + mAttributes +
-            ",mMaxPower=" + mMaxPower + ",mInterfaces=[");
-        for (int i = 0; i < mInterfaces.length; i++) {
+        StringBuilder builder = new StringBuilder("UsbConfiguration[id=" + id +
+                                                  ",name=" + name + ",attributes=" + attributes +
+                                                  ",maxPower=" + maxPower + ",interfaces=[");
+        for (int i = 0; i < interfaces.length; i++) {
             builder.append("\n");
-            builder.append(mInterfaces[i].toString());
+            builder.append(interfaces[i].toString());
         }
         builder.append("]");
         return builder.toString();
     }
 
     public static final Parcelable.Creator<UsbConfiguration> CREATOR =
-        new Parcelable.Creator<UsbConfiguration>() {
-            public UsbConfiguration createFromParcel(Parcel in) {
-                int id = in.readInt();
-                String name = in.readString();
-                int attributes = in.readInt();
-                int maxPower = in.readInt();
-                Parcelable[] interfaces = in.readParcelableArray(UsbInterface.class.getClassLoader());
-                UsbConfiguration configuration = new UsbConfiguration(id, name, attributes, maxPower);
-                configuration.setInterfaces(interfaces);
-                return configuration;
-            }
+            new Parcelable.Creator<UsbConfiguration>() {
+                public UsbConfiguration createFromParcel(Parcel in) {
+                    int id = in.readInt();
+                    String name = in.readString();
+                    int attributes = in.readInt();
+                    int maxPower = in.readInt();
+                    Parcelable[] interfaces = in.readParcelableArray(UsbInterface.class.getClassLoader());
+                    UsbConfiguration configuration = new UsbConfiguration(id, name, attributes, maxPower);
+                    configuration.setInterfaces(interfaces);
+                    return configuration;
+                }
 
-            public UsbConfiguration[] newArray(int size) {
-                return new UsbConfiguration[size];
-            }
-        };
+                public UsbConfiguration[] newArray(int size) {
+                    return new UsbConfiguration[size];
+                }
+            };
 
     public int describeContents() {
         return 0;
     }
 
     public void writeToParcel(Parcel parcel, int flags) {
-        parcel.writeInt(mId);
-        parcel.writeString(mName);
-        parcel.writeInt(mAttributes);
-        parcel.writeInt(mMaxPower);
-        parcel.writeParcelableArray(mInterfaces, 0);
+        parcel.writeInt(id);
+        parcel.writeString(name);
+        parcel.writeInt(attributes);
+        parcel.writeInt(maxPower);
+        parcel.writeParcelableArray(interfaces, 0);
     }
+
+    private static final int INDEX_NUMBER_INTERFACES = 4;
+    private static final int INDEX_CONFIGURATION_VALUE = 5;
+    private static final int INDEX_CONFIGURATION_STRING_INDEX = 6;
+    private static final int INDEX_ATTRIBUTES = 7;
+    private static final int INDEX_MAX_POWER = 8;
+
+    @NonNull
+    static UsbConfiguration fromNativeObject(@NonNull UsbDevice device, int configuration) {
+        // Get the native configuration object. Make sure you free it!
+        final ByteBuffer nativeObject = nativeGetConfiguration(device.getNativeObject(), configuration);
+        final int numberInterfaces = 0xFF & nativeObject.get(INDEX_NUMBER_INTERFACES);
+        final int id = 0xFF & nativeObject.get(INDEX_CONFIGURATION_VALUE);
+        final int stringIndex = 0xFF & nativeObject.get(INDEX_CONFIGURATION_STRING_INDEX);
+        final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
+        final int maxPower = 0xFF & nativeObject.get(INDEX_MAX_POWER);
+        final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
+        final UsbConfiguration usbConfiguration = new UsbConfiguration(id, name, attributes, maxPower);
+        final List<UsbInterface> usbInterfaces = new ArrayList<>();
+        for (int i = 0; i < numberInterfaces; ++i) {
+            usbInterfaces.addAll(UsbInterface.fromNativeObject(device, nativeGetInterface(nativeObject, i)));
+        }
+        usbConfiguration.setInterfaces(usbInterfaces.toArray(new UsbInterface[0]));
+
+        // Destroy the native configuration object
+        nativeDestroy(nativeObject);
+        return usbConfiguration;
+    }
+
+    private static native ByteBuffer nativeGetConfiguration(@NonNull ByteBuffer device, int configuration);
+
+    private static native ByteBuffer nativeGetInterface(@NonNull ByteBuffer nativeObject, int interfaceIndex);
+
+    private static native void nativeDestroy(@NonNull ByteBuffer nativeObject);
 }
