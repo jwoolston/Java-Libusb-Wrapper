@@ -16,6 +16,8 @@ package com.jwoolston.android.libusb;
  * limitations under the License.
  */
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -33,7 +35,7 @@ import java.nio.ByteBuffer;
  * used for control requests on endpoint zero.
  * <p>
  */
-public class UsbDevice {
+public class UsbDevice implements Parcelable {
 
     private static final String TAG = "UsbDevice";
 
@@ -280,6 +282,42 @@ public class UsbDevice {
         return builder.toString();
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(nativeGetPointerFromNativeObject(getNativeObject()));
+        dest.writeParcelable(device, flags);
+        dest.writeString(name);
+        dest.writeString(manufacturerName);
+        dest.writeString(productName);
+        dest.writeString(version);
+        dest.writeString(serialNumber);
+        dest.writeInt(vendorId);
+        dest.writeInt(productId);
+        dest.writeInt(deviceClass);
+        dest.writeInt(subclass);
+        dest.writeInt(protocol);
+        dest.writeInt(fileDescriptor);
+        dest.writeTypedArray(configurations, flags);
+        dest.writeTypedArray(interfaces, flags);
+    }
+
+    public static final Creator<UsbDevice> CREATOR = new Creator<UsbDevice>() {
+        @Override
+        public UsbDevice createFromParcel(Parcel in) {
+            return new UsbDevice(in);
+        }
+
+        @Override
+        public UsbDevice[] newArray(int size) {
+            return new UsbDevice[size];
+        }
+    };
+
     @NonNull
     static UsbDevice fromAndroidDevice(@NonNull LibUsbContext context, @NonNull android.hardware.usb.UsbDevice device,
                                        @NonNull android.hardware.usb.UsbDeviceConnection connection) {
@@ -305,6 +343,29 @@ public class UsbDevice {
         serialNumber = connection.getSerial();
 
         fileDescriptor = connection.getFileDescriptor();
+    }
+
+    protected UsbDevice(Parcel in) {
+        final ByteBuffer buffer = nativeGetNativeObjectFromPointer(in.readLong());
+        if (buffer == null) {
+            throw new IllegalStateException("Received a null reference for the native object. Creation from "
+                                            + "parcel failed.");
+        }
+        nativeObject = buffer;
+        device = in.readParcelable(android.hardware.usb.UsbDevice.class.getClassLoader());
+        name = in.readString();
+        manufacturerName = in.readString();
+        productName = in.readString();
+        version = in.readString();
+        serialNumber = in.readString();
+        vendorId = in.readInt();
+        productId = in.readInt();
+        deviceClass = in.readInt();
+        subclass = in.readInt();
+        protocol = in.readInt();
+        fileDescriptor = in.readInt();
+        configurations = in.createTypedArray(UsbConfiguration.CREATOR);
+        interfaces = in.createTypedArray(UsbInterface.CREATOR);
     }
 
     @NonNull
@@ -338,4 +399,11 @@ public class UsbDevice {
     private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
 
     private native int nativeGetConfigurationCount(@NonNull ByteBuffer device);
+
+    private native long nativeGetPointerFromNativeObject(@NonNull ByteBuffer device);
+
+    @Nullable
+    private native ByteBuffer nativeGetNativeObjectFromPointer(long pointer);
+
+
 }

@@ -90,3 +90,24 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetConfigurationCount(JNIEnv *
                                                                                                                device);
     return deviceHandle->dev->num_configurations;
 }
+
+JNIEXPORT jlong JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetPointerFromNativeObject(JNIEnv *env, jobject instance,
+                                                                             jobject device) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    return (jlong) ((void *) deviceHandle);
+
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetNativeObjectFromPointer(JNIEnv *env, jobject instance,
+                                                                             jlong pointer) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle*) ((void *) pointer);
+
+    if (deviceHandle == NULL) {
+        return NULL;
+    }
+
+    return ((*env)->NewDirectByteBuffer(env, (void *) deviceHandle, sizeof(struct libusb_device_handle)));
+}
