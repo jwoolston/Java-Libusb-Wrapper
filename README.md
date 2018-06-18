@@ -40,7 +40,7 @@ After setting up the NDK, you will need to reference it in your version of `loca
 Following this, the project should build successfully.
 
 ## Open Source Credits
-- Configuration of builds and deployment was done by @ToxicBakery. Additionally, he has provided a general sounding board and motivation to enlarge the scope of this project to provide a hopefully more useful library to the community.
+- Configuration of builds and deployment was done by [ToxicBakery](https://github.com/ToxicBakery). Additionally, he has provided a general sounding board and motivation to enlarge the scope of this project to provide a hopefully more useful library to the community.
 
 - The underlying libusb has been modified based on development work by another community member [vianney](https://github.com/vianney/libusb/tree/android) For convenience, I maintain my own for of libusb with his modifications and use it as the libusb source for this library. As libusb is updated, those changes will be pulled in as well.
 
