@@ -11,6 +11,9 @@ version: 2
 jobs:
   build:
     <<: *defaults
+    filters:
+            tags:
+              only: /.*/
     steps:
       - checkout
       - run:
