@@ -27,7 +27,7 @@ import java.util.Map.Entry;
 /**
  * This class allows you to access the state of USB and communicate with USB devices.
  * Currently only host mode is supported in the public API.
- *
+ * <p>
  * This class API is based on the Android {@link android.hardware.usb.UsbManager} class.
  *
  * @author Jared Woolston (Jared.Woolston@gmail.com)
@@ -42,9 +42,9 @@ public class UsbManager {
 
     private final Object cacheLock = new Object();
 
-    private final Context                         context;
+    private final Context context;
     private final android.hardware.usb.UsbManager androidUsbManager;
-    private final HashMap<String, UsbDevice>           localDeviceCache     = new HashMap<>();
+    private final HashMap<String, UsbDevice> localDeviceCache = new HashMap<>();
     private final HashMap<String, UsbDeviceConnection> localConnectionCache = new HashMap<>();
     private final LibUsbContext libUsbContext;
 
@@ -70,7 +70,7 @@ public class UsbManager {
 
     @NonNull
     public UsbDeviceConnection registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws
-                                                                                              DevicePermissionDenied {
+        DevicePermissionDenied {
         synchronized (cacheLock) {
             final String key = device.getDeviceName();
             if (localConnectionCache.containsKey(key)) {

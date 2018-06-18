@@ -14,7 +14,7 @@ Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetConfiguration(JNIEnv
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
     struct libusb_config_descriptor *config;
-    int retval = libusb_get_config_descriptor(deviceHandle, configuration, &config);
+    int retval = libusb_get_config_descriptor(deviceHandle->dev, (uint8_t) (0xFF & configuration), &config);
     if (retval) {
         LOGE("Error fetching configuration descriptor: %s", libusb_strerror(retval));
         return NULL;

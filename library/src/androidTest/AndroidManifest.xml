@@ -3,6 +3,8 @@
           xmlns:tools="http://schemas.android.com/tools">
     <uses-sdk tools:overrideLibrary="android.support.test.uiautomator.v18"/>
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
     <application>
         <activity android:name="com.jwoolston.android.libusb.USBTestActivity" />
     </application>

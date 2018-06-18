@@ -68,6 +68,14 @@ public class UsbDeviceConnection {
     }
 
     /**
+     * @return The device this connection is for.
+     */
+    @NonNull
+    public UsbDevice getDevice() {
+        return device;
+    }
+
+    /**
      * Releases all system resources related to the device. Once the object is closed it cannot be used again. The
      * client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again to retrieve a new
      * instance to reestablish communication with the device.
