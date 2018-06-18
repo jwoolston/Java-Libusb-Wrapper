@@ -34,6 +34,7 @@ jobs:
           name: Code Coverage
           command: |
             bash <(wget -q https://codecov.io/bash)
+            bash <(wget -q https://codecov.io/bash) -f "./library/integration.xml" -F integration
 
 workflows:
   version: 2

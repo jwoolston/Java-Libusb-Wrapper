@@ -15,10 +15,13 @@
  */
 package com.jwoolston.android.libusb;
 
+import android.nfc.Tag;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
+
 import com.jwoolston.android.libusb.util.Preconditions;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -196,7 +199,6 @@ public class UsbInterface implements Parcelable {
 
     @NonNull
     static List<UsbInterface> fromNativeObject(@NonNull UsbDevice device, @NonNull ByteBuffer nativeInterface) {
-        // TODO: Loop through alternate settings and create interfaces for each
         final List<UsbInterface> interfaces = new ArrayList<>();
         UsbInterface usbInterface = null;
         do {
@@ -211,9 +213,11 @@ public class UsbInterface implements Parcelable {
     @Nullable
     private static UsbInterface fromNativeDescriptor(@NonNull UsbDevice device, @NonNull ByteBuffer nativeObject,
                                                      int index) {
+        Log.i("UsbConf", "Device: " + device + " nativeInterface: " + nativeObject + " Index: " + index);
         final ByteBuffer nativeDescriptor = nativeGetInterfaceDescriptor(nativeObject, index);
 
         if (nativeDescriptor == null) {
+            Log.e("UsbConf", "Native descriptor was null!");
             return null;
         }
 
@@ -227,6 +231,7 @@ public class UsbInterface implements Parcelable {
         final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
         final UsbInterface usbInterface = new UsbInterface(id, alternateSetting, name, interfaceClass, subclass,
                                                           protocol);
+        Log.v("UsbConf", "UsbInterface: " + usbInterface + " Endpoint count: " + numEndpoints);
         final UsbEndpoint[] endpoints = new UsbEndpoint[numEndpoints];
         for (int i = 0; i < numEndpoints; ++i) {
             final ByteBuffer nativeEndpoint = nativeGetEndpoint(nativeDescriptor, i);

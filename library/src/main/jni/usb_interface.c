@@ -4,15 +4,16 @@
 
 #include <unistd.h>
 #include <string.h>
-#include "common.h"
+#include <common.h>
 
-#define  LOG_TAG    "UsbInterface-Native"
+#define  LOG_TAG    "UsbConfInterface-Native"
 
 JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_UsbInterface_nativeGetInterfaceDescriptor(JNIEnv *env, jclass type,
                                                                             jobject nativeObject, jint index) {
     struct libusb_interface *interface = (struct libusb_interface *) (*env)->GetDirectBufferAddress(env, nativeObject);
-
+    LOGV("Seeking alternate setting %i of %i", index, interface->num_altsetting);
+    //TODO: The number of alternate settings makes no sense
     if (index >= interface->num_altsetting) {
         return NULL;
     }
@@ -26,7 +27,6 @@ Java_com_jwoolston_android_libusb_UsbInterface_nativeGetEndpoint(JNIEnv *env, jc
                                                                  jint index) {
     struct libusb_interface_descriptor *descriptor = (struct libusb_interface_descriptor *)
             (*env)->GetDirectBufferAddress(env, nativeDescriptor);
-
     if (index >= descriptor->bNumEndpoints) {
         return NULL;
     }

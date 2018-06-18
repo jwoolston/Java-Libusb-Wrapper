@@ -2,7 +2,7 @@
 // Created by Jared Woolston (Jared.Woolston@gmail.com)
 //
 
-#include "common.h"
+#include <common.h>
 
 JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_LibUsbDeviceDescriptor_nativeGetDeviceDescriptor(JNIEnv *env, jclass type,

@@ -209,15 +209,17 @@ public class UsbDevice implements Parcelable {
     private UsbInterface[] getInterfaceList() {
         if (interfaces == null) {
             int configurationCount = configurations.length;
+            Log.v(TAG, "Configuration Count: " + configurationCount);
             int interfaceCount = 0;
             for (int i = 0; i < configurationCount; i++) {
-                UsbConfiguration configuration = (UsbConfiguration) configurations[i];
+                UsbConfiguration configuration = configurations[i];
                 interfaceCount += configuration.getInterfaceCount();
             }
+            Log.v(TAG, "Interface Count: " + interfaceCount);
             interfaces = new UsbInterface[interfaceCount];
             int offset = 0;
             for (int i = 0; i < configurationCount; i++) {
-                UsbConfiguration configuration = (UsbConfiguration) configurations[i];
+                UsbConfiguration configuration = configurations[i];
                 interfaceCount = configuration.getInterfaceCount();
                 for (int j = 0; j < interfaceCount; j++) {
                     interfaces[offset++] = configuration.getInterface(j);
