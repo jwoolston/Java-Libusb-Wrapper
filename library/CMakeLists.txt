@@ -42,7 +42,7 @@ add_library(
     src/main/jni/common.h
     src/main/jni/libusb_device_descriptor.c
     src/main/jni/libusb_error_enum.c
-    src/main/jni/logging.h
+    src/main/jni/logging.c
     src/main/jni/usb_configuration.c
     src/main/jni/usb_device.c
     src/main/jni/usb_device_connection.c

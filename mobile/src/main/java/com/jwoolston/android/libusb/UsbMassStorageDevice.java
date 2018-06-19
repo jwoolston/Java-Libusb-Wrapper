@@ -157,6 +157,10 @@ public class UsbMassStorageDevice {
         setupDevice();
     }
 
+    public BlockDeviceDriver getBlockDevice() {
+        return blockDevice;
+    }
+
     /**
      * Sets the device up. Claims interface and initiates the device connection.
      * Initializes the {@link #blockDevice}
@@ -195,7 +199,7 @@ public class UsbMassStorageDevice {
         }
 
         LibusbError release = deviceConnection.releaseInterface(usbInterface);
-        if (release != release) {
+        if (release != LibusbError.LIBUSB_SUCCESS) {
             Log.e(TAG, "could not release interface! " + release);
         }
         deviceConnection.close();

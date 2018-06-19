@@ -325,12 +325,30 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *
     if (buffer_) {
         buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
     }
-    jint transfered;
-    jint result = libusb_bulk_transfer(deviceHandle, endpoint, buffer + offset, length, &transfered, timeout);
+    jint transferred;
+    LOGI("Device Handle: %p", deviceHandle);
+    LOGI("Endpoint Address: %u", (unsigned char) (0xFF & endpoint));
+    LOGI("Length: %i", length);
+
+    unsigned char *test = malloc(length * sizeof(unsigned char));
+    if ((endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT) {
+        memcpy(test, buffer, length);
+    }
+
+    jint result = libusb_bulk_transfer(deviceHandle, (unsigned char) (0xFF & endpoint),
+                                       test, length, &transferred, (unsigned int) timeout);
+    LOGD("Libusb Result: %i", result);
+    if ((endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
+        if (result == 0 && transferred > 0) {
+            log_dump(LOG_TAG, test, transferred, 16);
+            memcpy(buffer, test, transferred);
+        }
+    }
+
     if (buffer) {
         (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
     }
-    return ((result == 0) ? transfered : result);
+    return ((result == 0) ? transferred : result);
 }
 
 JNIEXPORT jint JNICALL

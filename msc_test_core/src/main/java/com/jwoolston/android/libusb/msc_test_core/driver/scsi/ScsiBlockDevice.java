@@ -104,6 +104,10 @@ public class ScsiBlockDevice implements BlockDeviceDriver {
 		Log.i(TAG, "Last block address: " + lastBlockAddress);
 	}
 
+	public int getLastBlockAddress() {
+		return lastBlockAddress;
+	}
+
 	/**
 	 * Transfers the desired command to the device. If the command has a data
 	 * phase the parameter <code>inBuffer</code> is used to store or read data

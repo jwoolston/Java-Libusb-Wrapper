@@ -13,7 +13,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+
+import com.jwoolston.android.libusb.msc_test_core.driver.scsi.ScsiBlockDevice;
+import com.jwoolston.android.libusb.util.Hexdump;
+
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
@@ -62,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
                                                                                               IOException {
         final UsbManager manager = new UsbManager(getApplicationContext());
         final UsbDeviceConnection connection = manager.registerDevice(device);
+        //connection.resetDevice();
         Log.d(TAG, "Initiating transfer from device: " + connection.getDevice());
         UsbMassStorageDevice msc = UsbMassStorageDevice.getMassStorageDevice(this, manager, connection);
         if (msc == null) {
@@ -69,6 +75,19 @@ public class MainActivity extends AppCompatActivity {
         }
         // before interacting with a device you need to call init()!
         msc.init();
+        final ScsiBlockDevice block = (ScsiBlockDevice) msc.getBlockDevice();
+        int blockSize = block.getBlockSize();
+        int lastBlockAddress = block.getLastBlockAddress();
+        final byte[] data = new byte[blockSize];
+        final ByteBuffer buffer = ByteBuffer.wrap(data);
+        for (int i = 4096; i < 4102; ++i) {
+            buffer.rewind();
+            block.read(i, buffer);
+            Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 0, 128));
+            Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 128, 128));
+            Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 256, 128));
+            Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 384, 128));
+        }
     }
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
