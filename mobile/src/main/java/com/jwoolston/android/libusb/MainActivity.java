@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import java.io.IOException;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
@@ -57,10 +58,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void communicateWithDevice(@NonNull android.hardware.usb.UsbDevice device) throws DevicePermissionDenied {
+    private void communicateWithDevice(@NonNull android.hardware.usb.UsbDevice device) throws DevicePermissionDenied,
+                                                                                              IOException {
         final UsbManager manager = new UsbManager(getApplicationContext());
         final UsbDeviceConnection connection = manager.registerDevice(device);
-        Log.d(TAG, "Device: " + connection.getDevice());
+        Log.d(TAG, "Initiating transfer from device: " + connection.getDevice());
+        UsbMassStorageDevice msc = UsbMassStorageDevice.getMassStorageDevice(this, manager, connection);
+        if (msc == null) {
+            throw new RuntimeException("Received a null MSC device.");
+        }
+        // before interacting with a device you need to call init()!
+        msc.init();
     }
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
@@ -80,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
                                 communicateWithDevice(device);
                             } catch (DevicePermissionDenied devicePermissionDenied) {
                                 devicePermissionDenied.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
                     } else {
