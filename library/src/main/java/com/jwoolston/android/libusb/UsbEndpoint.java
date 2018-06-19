@@ -157,7 +157,8 @@ public class UsbEndpoint implements Parcelable {
     static UsbEndpoint fromNativeObject(@NonNull ByteBuffer nativeObject) {
         final int address = 0xFF & nativeObject.get(INDEX_ADDRESS);
         final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
-        final int maxPacketSize = 0xFFFF & nativeObject.getShort(INDEX_MAX_PACKET_SIZE);
+        final int maxPacketSize = (0xFF & nativeObject.get(INDEX_MAX_PACKET_SIZE))
+                | ((0xFF & nativeObject.get(INDEX_MAX_PACKET_SIZE + 1)) << 8);
         final int interval = 0xFF & nativeObject.get(INDEX_INTERVAL);
         return new UsbEndpoint(address, attributes, maxPacketSize, interval);
     }

@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <common.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #define  LOG_TAG    "UsbDeviceConnection-Native"
 
 static jmethodID controlCallback;
@@ -81,7 +83,7 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
                 struct libusb_control_setup *controlSetup = libusb_control_transfer_get_setup(transfer);
                 if ((controlSetup->bmRequestType & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
                     data = malloc(transfer->actual_length * sizeof(unsigned char));
-                    memcpy(data, libusb_control_transfer_get_data(transfer), transfer->actual_length);
+                    memcpy(data, libusb_control_transfer_get_data(transfer), (size_t) transfer->actual_length);
                     // We don't free the buffer here because we expect libusb to do it with control transfers
                     (*env)->NewDirectByteBuffer(env, data, transfer->actual_length);
                 }
@@ -95,7 +97,7 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
             case LIBUSB_TRANSFER_TYPE_BULK: {
                 if ((transfer->endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
                     data = malloc(transfer->actual_length * sizeof(unsigned char));
-                    memcpy(data, transfer->buffer, transfer->actual_length);
+                    memcpy(data, transfer->buffer, (size_t) transfer->actual_length);
                     // We don't free the buffer here because we expect libusb to do it with bulk transfers
                     (*env)->NewDirectByteBuffer(env, data, transfer->actual_length);
                 }
@@ -109,7 +111,7 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
             case LIBUSB_TRANSFER_TYPE_INTERRUPT: {
                 if ((transfer->endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
                     data = malloc(transfer->actual_length * sizeof(unsigned char));
-                    memcpy(data, transfer->buffer, transfer->actual_length);
+                    memcpy(data, transfer->buffer, (size_t) transfer->actual_length);
                     // We don't free the buffer here because we expect libusb to do it with basic interrupt transfers
                     (*env)->NewDirectByteBuffer(env, data, transfer->actual_length);
                 }
@@ -249,8 +251,10 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequest(JNIEn
     if (buffer_) {
         buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
     }
-    jint result = libusb_control_transfer(deviceHandle, requestType, request, value, index, buffer + offset, length,
-                                          timeout);
+    jint result = libusb_control_transfer(deviceHandle, (uint8_t) (0xFF & requestType), (uint8_t) (0xFF & request),
+                                          (uint16_t) (0xFFFF & value), (uint16_t) (0xFFFF & index),
+                                          (unsigned char *) (buffer + offset), (uint16_t) (0xFFFF & length),
+                                          (unsigned int) timeout);
     if (buffer) {
         (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
     }
@@ -287,7 +291,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequestAsync(
         if (buffer_) {
             buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
         }
-        memcpy(buffer + LIBUSB_CONTROL_SETUP_SIZE + offset, userData, length);
+        memcpy(buffer + LIBUSB_CONTROL_SETUP_SIZE + offset, userData, (size_t) length);
         if (buffer) {
             (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
         }
@@ -447,3 +451,5 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeResetDevice(JNIEnv *
                                                                                                                device);
     return libusb_reset_device(deviceHandle);
 }
+
+#pragma clang diagnostic pop

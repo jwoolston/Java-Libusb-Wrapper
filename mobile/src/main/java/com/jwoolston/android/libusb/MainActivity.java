@@ -5,10 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -38,46 +36,54 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override protected void onStart() {
+    @Override
+    protected void onStart() {
         super.onStart();
         request();
     }
 
     private void request() {
-        UsbManager mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        android.hardware.usb.UsbManager usbManager =
+                (android.hardware.usb.UsbManager) getSystemService(Context.USB_SERVICE);
         PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        registerReceiver(mUsbReceiver, filter);
+        registerReceiver(usbReceiver, filter);
 
-        HashMap<String, UsbDevice> devices = mUsbManager.getDeviceList();
+        HashMap<String, android.hardware.usb.UsbDevice> devices = usbManager.getDeviceList();
         for (String key : devices.keySet()) {
-            UsbDevice device = devices.get(key);
-            mUsbManager.requestPermission(device, mPermissionIntent);
+            android.hardware.usb.UsbDevice device = devices.get(key);
+            usbManager.requestPermission(device, mPermissionIntent);
             break;
         }
     }
 
+    private void communicateWithDevice(@NonNull android.hardware.usb.UsbDevice device) throws DevicePermissionDenied {
+        final UsbManager manager = new UsbManager(getApplicationContext());
+        final UsbDeviceConnection connection = manager.registerDevice(device);
+        Log.d(TAG, "Device: " + connection.getDevice());
+    }
+
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+
+    private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
 
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (ACTION_USB_PERMISSION.equals(action)) {
                 synchronized (this) {
-                    UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                    android.hardware.usb.UsbDevice device = (android.hardware.usb.UsbDevice)
+                            intent.getParcelableExtra(android.hardware.usb.UsbManager.EXTRA_DEVICE);
 
-                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                    if (intent.getBooleanExtra(android.hardware.usb.UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         if (device != null) {
-                            //call method to set up device communication
+                            try {
+                                communicateWithDevice(device);
+                            } catch (DevicePermissionDenied devicePermissionDenied) {
+                                devicePermissionDenied.printStackTrace();
+                            }
                         }
                     } else {
                         Log.d(TAG, "permission denied for device " + device);
-                        Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override public void run() {
-                                request();
-                            }
-                        }, 2000);
                     }
                 }
             }

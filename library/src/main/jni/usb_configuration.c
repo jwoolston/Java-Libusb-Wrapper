@@ -19,6 +19,7 @@ Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetConfiguration(JNIEnv
         LOGE("Error fetching configuration descriptor: %s", libusb_strerror(retval));
         return NULL;
     }
+
     return ((*env)->NewDirectByteBuffer(env, (void *) config, sizeof(struct libusb_config_descriptor)));
 }
 
@@ -27,8 +28,9 @@ Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetInterface(JNIEnv *en
                                                                       jint interfaceIndex) {
     struct libusb_config_descriptor *config = (struct libusb_config_descriptor *)
             (*env)->GetDirectBufferAddress(env, nativeObject);
-    const struct libusb_interface interface = config->interface[interfaceIndex];
-    return ((*env)->NewDirectByteBuffer(env, (void *) &interface, sizeof(struct libusb_interface)));
+
+    return ((*env)->NewDirectByteBuffer(env, (void *) (config->interface + interfaceIndex), sizeof(struct
+            libusb_interface)));
 }
 
 JNIEXPORT void JNICALL
