@@ -383,16 +383,54 @@ public class UsbDevice implements Parcelable {
         configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
     }
 
+    /**
+     * Retrieves a string descriptor from the device.
+     *
+     * @param device {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     * @param index {@code int} The string index to retrieve. A value of 0 will  cause {@code null} to be returned.
+     * @return {@link String} The descriptor or null if one is not present on the device.
+     */
     @Nullable
     static native String nativeGetStringDescriptor(@NonNull ByteBuffer device, int index);
 
+    /**
+     * Creates a {@code libusb_device_handle} native instance for the give file descriptor. This file descriptor must be
+     * provided by {@link android.hardware.usb.UsbDeviceConnection#getFileDescriptor()} in order to have proper permissions.
+     *
+     * @param context {@link ByteBuffer} pointing to a {@code libusb_context} instance in native.
+     * @param fd {@code int} The file descriptor for the opened device.
+     * @return {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native, or {@code null} if a
+     * failure occurred.
+     */
     @Nullable
     private static native ByteBuffer wrapDevice(@NonNull ByteBuffer context, int fd);
 
+    /**
+     * Retrieves the manufacturer name string from the device.
+     *
+     * @param device {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     * @param descriptor {@link ByteBuffer} pointing to a {@code libusb_device_descriptor} instanace in native. Provided by {@link LibUsbDeviceDescriptor#getNativeObject()}.
+     * @return {@link String} The device manufacturer name.
+     */
     private native String nativeGetManufacturerString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
 
+    /**
+     * Retrieves the product name string from the device.
+     *
+     * @param device     {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     * @param descriptor {@link ByteBuffer} pointing to a {@code libusb_device_descriptor} instanace in native. Provided by {@link LibUsbDeviceDescriptor#getNativeObject()}.
+     *
+     * @return {@link String} The device product name.
+     */
     private native String nativeGetProductNameString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
 
+    /**
+     * Retrieves the product version number for the device.
+     *
+     * @param descriptor {@link ByteBuffer} pointing to a {@code libusb_device_descriptor} instanace in native. Provided by {@link LibUsbDeviceDescriptor#getNativeObject()}.
+     *
+     * @return {@link String} The device product version.
+     */
     private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
 
     private native int nativeGetConfigurationCount(@NonNull ByteBuffer device);
