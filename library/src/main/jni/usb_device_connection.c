@@ -325,24 +325,21 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *
     if (buffer_) {
         buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
     }
-    jint transferred;
-    LOGI("Device Handle: %p", deviceHandle);
-    LOGI("Endpoint Address: %u", (unsigned char) (0xFF & endpoint));
-    LOGI("Length: %i", length);
+    int transferred;
+    unsigned char *target;
+    target = (endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN ? calloc(1, 512) : buffer + offset;
+    jint result = libusb_bulk_transfer(deviceHandle, (unsigned char) (0xFF & endpoint),
+                                       target, length, &transferred, (unsigned int) timeout);
 
-    unsigned char *test = malloc(length * sizeof(unsigned char));
-    if ((endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT) {
-        memcpy(test, buffer, length);
+    if (result < 0) {
+        LOGE("Result: %s", libusb_error_name(result));
     }
 
-    jint result = libusb_bulk_transfer(deviceHandle, (unsigned char) (0xFF & endpoint),
-                                       test, length, &transferred, (unsigned int) timeout);
-    LOGD("Libusb Result: %i", result);
     if ((endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
-        if (result == 0 && transferred > 0) {
-            log_dump(LOG_TAG, test, transferred, 16);
-            memcpy(buffer, test, transferred);
-        }
+        LOGV("Transferred: %i", transferred);
+        log_dump(LOG_TAG, target, transferred, 16);
+        memcpy(buffer, target, transferred);
+        free(target);
     }
 
     if (buffer) {

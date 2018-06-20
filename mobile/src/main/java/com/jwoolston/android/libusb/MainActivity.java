@@ -80,14 +80,12 @@ public class MainActivity extends AppCompatActivity {
         int lastBlockAddress = block.getLastBlockAddress();
         final byte[] data = new byte[blockSize];
         final ByteBuffer buffer = ByteBuffer.wrap(data);
-        for (int i = 4096; i < 4102; ++i) {
             buffer.rewind();
-            block.read(i, buffer);
+            block.read(0, buffer);
             Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 0, 128));
             Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 128, 128));
             Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 256, 128));
             Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 384, 128));
-        }
     }
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";

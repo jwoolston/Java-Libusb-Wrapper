@@ -1,7 +1,5 @@
 package com.jwoolston.android.libusb;
 
-import android.util.Log;
-
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -41,8 +39,6 @@ public class SynchronousMSC implements UsbCommunication {
 
         if (result < 0) {
             throw new IOException("Could not read from device, result == " + LibusbError.fromNative(result));
-        } else {
-            Log.v("SynchronousMSC","Read " + result + " bytes from device");
         }
 
         dest.position(dest.position() + result);

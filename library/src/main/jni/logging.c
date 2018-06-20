@@ -54,5 +54,5 @@ void log_dumpf(const char *tag, const char *fmt, const void *addr, int len, int 
 }
 
 void log_dump(const char *tag, const void *addr, int len, int linelen) {
-    log_dumpf(tag, "%s\n", addr, len, linelen);
+    log_dumpf(tag, "\n%s\n", addr, len, linelen);
 }
