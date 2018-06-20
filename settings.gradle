@@ -1,1 +1,1 @@
-include ':mobile', ':things', ':library', ':msc_test_core', ':myapplication'
+include ':mobile', ':things', ':library', ':msc_test_core'

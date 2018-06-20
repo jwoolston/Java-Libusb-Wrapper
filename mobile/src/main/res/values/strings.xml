@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Android-Libusb-Wrapper</string>
-    <string name="title_activity_main">Libusb Wrapper Demo</string>
+    <string name="title_activity_main">ALW MSC Demo</string>
 </resources>

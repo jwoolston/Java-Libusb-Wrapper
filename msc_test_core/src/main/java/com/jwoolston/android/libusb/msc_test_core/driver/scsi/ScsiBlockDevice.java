@@ -18,7 +18,7 @@
 package com.jwoolston.android.libusb.msc_test_core.driver.scsi;
 
 import android.util.Log;
-import com.jwoolston.android.libusb.msc_test_core.Hexdump;
+
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.CommandBlockWrapper;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.CommandStatusWrapper;
@@ -30,6 +30,7 @@ import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.ScsiReadC
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.ScsiTestUnitReady;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.ScsiWrite10;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -131,8 +132,6 @@ public class ScsiBlockDevice implements BlockDeviceDriver {
 		outBuffer.clear();
 		command.serialize(outBuffer);
 		outBuffer.clear();
-
-		Log.v("Command", "Sent command:\n" + Hexdump.dumpHexString(outArray));
 
 		int written = usbCommunication.bulkOutTransfer(outBuffer);
 		if (written != outArray.length) {

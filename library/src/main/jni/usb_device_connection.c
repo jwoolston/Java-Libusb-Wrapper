@@ -325,22 +325,10 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *
     if (buffer_) {
         buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
     }
+
     int transferred;
-    unsigned char *target;
-    target = (endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN ? calloc(1, 512) : buffer + offset;
     jint result = libusb_bulk_transfer(deviceHandle, (unsigned char) (0xFF & endpoint),
-                                       target, length, &transferred, (unsigned int) timeout);
-
-    if (result < 0) {
-        LOGE("Result: %s", libusb_error_name(result));
-    }
-
-    if ((endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_IN) {
-        LOGV("Transferred: %i", transferred);
-        log_dump(LOG_TAG, target, transferred, 16);
-        memcpy(buffer, target, transferred);
-        free(target);
-    }
+                                       buffer + offset, length, &transferred, (unsigned int) timeout);
 
     if (buffer) {
         (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
