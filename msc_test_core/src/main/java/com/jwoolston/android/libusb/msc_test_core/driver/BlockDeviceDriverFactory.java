@@ -17,6 +17,7 @@
 
 package com.jwoolston.android.libusb.msc_test_core.driver;
 
+import com.jwoolston.android.libusb.msc_test_core.driver.scsi.AsyncScsiBlockDevice;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.ScsiBlockDevice;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
 
@@ -37,8 +38,12 @@ public class BlockDeviceDriverFactory {
 	 *            The underlying USB communication.
 	 * @return A driver which can handle the USB mass storage device.
 	 */
-	public static BlockDeviceDriver createBlockDevice(UsbCommunication usbCommunication) {
+	public static BlockDeviceDriver createBlockDevice(UsbCommunication usbCommunication, boolean async) {
 		// we currently only support scsi transparent command set
-		return new ScsiBlockDevice(usbCommunication);
+		if (async) {
+			return new AsyncScsiBlockDevice(usbCommunication);
+		} else {
+			return new ScsiBlockDevice(usbCommunication);
+		}
 	}
 }

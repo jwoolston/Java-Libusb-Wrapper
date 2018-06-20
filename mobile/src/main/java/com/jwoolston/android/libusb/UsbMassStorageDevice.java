@@ -23,9 +23,6 @@ import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriverFactory;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Class representing a connected USB mass storage device. You can enumerate
@@ -153,8 +150,8 @@ public class UsbMassStorageDevice {
      *                               {@link UsbDevice} is missing.
      * @see #getUsbDevice()
      */
-    public void init() throws IOException {
-        setupDevice();
+    public void init(boolean async) throws IOException {
+        setupDevice(async);
     }
 
     public BlockDeviceDriver getBlockDevice() {
@@ -166,9 +163,9 @@ public class UsbMassStorageDevice {
      * Initializes the {@link #blockDevice}
      *
      * @throws IOException If reading from the physical device fails.
-     * @see #init()
+     * @see #init(boolean)
      */
-    private void setupDevice() throws IOException {
+    private void setupDevice(boolean async) throws IOException {
         Log.d(TAG, "setup device");
         if (deviceConnection == null) {
             throw new IOException("deviceConnection is null!");
@@ -179,11 +176,11 @@ public class UsbMassStorageDevice {
             throw new IOException("could not claim interface! " + claim);
         }
 
-        UsbCommunication communication = new SynchronousMSC(deviceConnection, outEndpoint, inEndpoint);
+        UsbCommunication communication = new MSCCommunication(deviceConnection, outEndpoint, inEndpoint);
         byte[] b = new byte[1];
         deviceConnection.controlTransfer(0b10100001, 0b11111110, 0, usbInterface.getId(), b, 1, 5000);
         Log.i(TAG, "MAX LUN " + (int) b[0]);
-        blockDevice = BlockDeviceDriverFactory.createBlockDevice(communication);
+        blockDevice = BlockDeviceDriverFactory.createBlockDevice(communication, async);
         blockDevice.init();
     }
 

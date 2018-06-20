@@ -343,7 +343,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public LibusbError bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                  int length, int timeout) {
         return bulkTransferAsync(callback, endpoint, buffer, 0, length, timeout);
     }
@@ -360,12 +360,12 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public LibusbError bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                  int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         manager.startAsyncIfNeeded();
-        return nativeBulkRequestAsync(device.getNativeObject(), callback, endpoint.getAddress(), buffer, offset,
-            length, timeout);
+        return LibusbError.fromNative(nativeBulkRequestAsync(device.getNativeObject(), callback, endpoint.getAddress(), buffer, offset,
+            length, timeout));
     }
 
     /**

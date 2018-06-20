@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                 throw new RuntimeException("Received a null MSC device.");
             }
             // before interacting with a device you need to call init()!
-            msc.init();
+            msc.init(false);
             final ScsiBlockDevice block = (ScsiBlockDevice) msc.getBlockDevice();
             int blockSize = block.getBlockSize();
             int lastBlockAddress = block.getLastBlockAddress();
@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 throw new RuntimeException("Received a null MSC device.");
             }
             // before interacting with a device you need to call init()!
-            msc.init();
+            msc.init(true);
             final ScsiBlockDevice block = (ScsiBlockDevice) msc.getBlockDevice();
             int blockSize = block.getBlockSize();
             int lastBlockAddress = block.getLastBlockAddress();

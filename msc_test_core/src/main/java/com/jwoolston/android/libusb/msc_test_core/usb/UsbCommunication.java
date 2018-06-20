@@ -17,6 +17,9 @@
 
 package com.jwoolston.android.libusb.msc_test_core.usb;
 
+import com.jwoolston.android.libusb.LibusbError;
+import com.jwoolston.android.libusb.async.BulkTransferCallback;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -51,4 +54,24 @@ public interface UsbCommunication {
 	 * @return Bytes read if successful.
 	 */
 	int bulkInTransfer(ByteBuffer dest) throws IOException;
+
+	/**
+	 * Performs a bulk out transfer beginning at the offset specified in the
+	 * <code>buffer</code> of length <code>buffer#remaining()</code>.
+	 *
+	 * @param src The data to transfer.
+	 *
+	 * @return Bytes transmitted if successful.
+	 */
+	LibusbError asyncBulkOutTransfer(BulkTransferCallback callback, ByteBuffer src) throws IOException;
+
+	/**
+	 * Performs a bulk in transfer beginning at offset zero in the
+	 * <code>buffer</code> of length <code>buffer#remaining()</code>.
+	 *
+	 * @param dest The buffer where data should be transferred.
+	 *
+	 * @return Bytes read if successful.
+	 */
+	LibusbError asyncBulkInTransfer(BulkTransferCallback callback, ByteBuffer dest) throws IOException;
 }
