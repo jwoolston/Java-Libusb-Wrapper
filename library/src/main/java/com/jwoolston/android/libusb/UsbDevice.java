@@ -20,7 +20,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import com.jwoolston.android.libusb.util.Preconditions;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -49,11 +51,11 @@ public class UsbDevice implements Parcelable {
     private final String version;
     @NonNull
     private final String serialNumber;
-    private final int    vendorId;
-    private final int    productId;
-    private final int    deviceClass;
-    private final int    subclass;
-    private final int    protocol;
+    private final int vendorId;
+    private final int productId;
+    private final int deviceClass;
+    private final int subclass;
+    private final int protocol;
 
     private final int fileDescriptor;
 
@@ -62,7 +64,7 @@ public class UsbDevice implements Parcelable {
 
     /** All configurations for this device, only null during creation */
     @Nullable
-    private UsbConfiguration[]   configurations;
+    private UsbConfiguration[] configurations;
     /** All interfaces on the device. Initialized on first call to getInterfaceList */
     @Nullable
     private UsbInterface[] interfaces;
@@ -262,13 +264,13 @@ public class UsbDevice implements Parcelable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder("UsbDevice[name=" + name +
-                                                  ",vendorId=" + vendorId + ",productId=" + productId +
-                                                  ",deviceClass=" + deviceClass + ",subclass=" + subclass
-                                                  + ",protocol=" + protocol +
-                                                  ",manufacturerName=" + manufacturerName + ",productName=" + productName
-                                                  +
-                                                  ",version=" + version + ",serialNumber=" + serialNumber
-                                                  + ",configurations=[");
+            ",vendorId=" + vendorId + ",productId=" + productId +
+            ",deviceClass=" + deviceClass + ",subclass=" + subclass
+            + ",protocol=" + protocol +
+            ",manufacturerName=" + manufacturerName + ",productName=" + productName
+            +
+            ",version=" + version + ",serialNumber=" + serialNumber
+            + ",configurations=[");
         if (configurations != null) {
             for (UsbConfiguration configuration : configurations) {
                 builder.append("\n");
@@ -346,7 +348,7 @@ public class UsbDevice implements Parcelable {
         final ByteBuffer buffer = nativeGetNativeObjectFromPointer(in.readLong());
         if (buffer == null) {
             throw new IllegalStateException("Received a null reference for the native object. Creation from "
-                                            + "parcel failed.");
+                + "parcel failed.");
         }
         nativeObject = buffer;
         device = in.readParcelable(android.hardware.usb.UsbDevice.class.getClassLoader());
@@ -387,7 +389,8 @@ public class UsbDevice implements Parcelable {
      * Retrieves a string descriptor from the device.
      *
      * @param device {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
-     * @param index {@code int} The string index to retrieve. A value of 0 will  cause {@code null} to be returned.
+     * @param index  {@code int} The string index to retrieve. A value of 0 will  cause {@code null} to be returned.
+     *
      * @return {@link String} The descriptor or null if one is not present on the device.
      */
     @Nullable
@@ -398,7 +401,8 @@ public class UsbDevice implements Parcelable {
      * provided by {@link android.hardware.usb.UsbDeviceConnection#getFileDescriptor()} in order to have proper permissions.
      *
      * @param context {@link ByteBuffer} pointing to a {@code libusb_context} instance in native.
-     * @param fd {@code int} The file descriptor for the opened device.
+     * @param fd      {@code int} The file descriptor for the opened device.
+     *
      * @return {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native, or {@code null} if a
      * failure occurred.
      */
@@ -408,8 +412,9 @@ public class UsbDevice implements Parcelable {
     /**
      * Retrieves the manufacturer name string from the device.
      *
-     * @param device {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     * @param device     {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
      * @param descriptor {@link ByteBuffer} pointing to a {@code libusb_device_descriptor} instanace in native. Provided by {@link LibUsbDeviceDescriptor#getNativeObject()}.
+     *
      * @return {@link String} The device manufacturer name.
      */
     private native String nativeGetManufacturerString(@NonNull ByteBuffer device, @NonNull ByteBuffer descriptor);
@@ -433,10 +438,33 @@ public class UsbDevice implements Parcelable {
      */
     private native String nativeGetDeviceVersion(@NonNull ByteBuffer descriptor);
 
+    /**
+     * Retrieves the number of configurations available on the device.
+     *
+     * @param device {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     *
+     * @return {@code int} The number of configurations.
+     */
     private native int nativeGetConfigurationCount(@NonNull ByteBuffer device);
 
+    /**
+     * Retrieves the pointer to a {@code libusb_device_handle} instance in native. This is useful when parceling/serializing the {@link UsbDevice}
+     * as the {@link ByteBuffer} we normally use cannot be serialized and still point to the same instance.
+     *
+     * @param device {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     *
+     * @return {@code long} The native pointer.
+     */
     private native long nativeGetPointerFromNativeObject(@NonNull ByteBuffer device);
 
+    /**
+     * Converts a native pointer into a {@link ByteBuffer} wrapping a {@code libusb_device_handle} instance in native. This is
+     * useful when constructing a {@link UsbDevice} from serialization or parcel as only the pointer can be stored.
+     *
+     * @param pointer {@code long} The native pointer.
+     *
+     * @return {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided by {@link UsbDevice#getNativeObject()}.
+     */
     @Nullable
     private native ByteBuffer nativeGetNativeObjectFromPointer(long pointer);
 
