@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands;
@@ -26,9 +26,9 @@ import java.nio.ByteOrder;
  * Thus the hole command takes 10 byte when serialized.
  * <p>
  * The actual data is transferred in the data phase.
- * 
+ *
  * @author mjahnen
- * 
+ *
  */
 public class ScsiRead10 extends CommandBlockWrapper {
 
@@ -51,7 +51,7 @@ public class ScsiRead10 extends CommandBlockWrapper {
 
 	/**
 	 * Constructs a new read command with the given information.
-	 * 
+	 *
 	 * @param blockAddress
 	 *            The logical block address the read should start.
 	 * @param transferBytes

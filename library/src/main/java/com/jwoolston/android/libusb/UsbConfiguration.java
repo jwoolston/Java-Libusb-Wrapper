@@ -15,13 +15,10 @@
  */
 package com.jwoolston.android.libusb;
 
-import android.nfc.Tag;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
-
 import com.jwoolston.android.libusb.util.Preconditions;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -33,8 +30,6 @@ import java.util.List;
  * one or more {@link UsbEndpoint}s, which are the channels by which the host transfers data with the device.
  */
 public class UsbConfiguration implements Parcelable {
-
-    private static final String TAG = "UsbConfiguration";
 
     /**
      * Mask for "self-powered" bit in the configuration's attributes.
@@ -202,11 +197,14 @@ public class UsbConfiguration implements Parcelable {
         final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
         final int maxPower = 0xFF & nativeObject.get(INDEX_MAX_POWER);
         final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
+
         final UsbConfiguration usbConfiguration = new UsbConfiguration(id, name, attributes, maxPower);
-        Log.v(TAG, "Number of interfaces for configuration: " + numberInterfaces);
         final List<UsbInterface> usbInterfaces = new ArrayList<>();
         for (int i = 0; i < numberInterfaces; ++i) {
-            usbInterfaces.addAll(UsbInterface.fromNativeObject(device, nativeGetInterface(nativeObject, i)));
+            // This is of type struct libusb_interface
+            final ByteBuffer nativeInterface = nativeGetInterface(nativeObject, i);
+            List<UsbInterface> usbInterface = UsbInterface.fromNativeObject(device, nativeInterface);
+            usbInterfaces.addAll(usbInterface);
         }
         usbConfiguration.setInterfaces(usbInterfaces.toArray(new UsbInterface[0]));
 
@@ -217,6 +215,12 @@ public class UsbConfiguration implements Parcelable {
 
     private static native ByteBuffer nativeGetConfiguration(@NonNull ByteBuffer device, int configuration);
 
+    /**
+     *
+     * @param nativeObject {@link ByteBuffer} wrapper to native stuct. Expected to be a libusb_config_descriptor.
+     * @param interfaceIndex
+     * @return
+     */
     private static native ByteBuffer nativeGetInterface(@NonNull ByteBuffer nativeObject, int interfaceIndex);
 
     private static native void nativeDestroy(@NonNull ByteBuffer nativeObject);

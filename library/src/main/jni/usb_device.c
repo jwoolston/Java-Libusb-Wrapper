@@ -4,16 +4,21 @@
 
 #include <common.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #define  LOG_TAG    "UsbDevice-Native"
 
 JNIEXPORT jstring JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetStringDescriptor(JNIEnv *env, jclass type, jobject device,
                                                                       jint index) {
+    if (index == 0) {
+        return NULL;
+    }
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
     size_t length = 50 * sizeof(unsigned char);
     unsigned char *name = malloc(length);
-    libusb_get_string_descriptor_ascii(deviceHandle, index, name, length);
+    libusb_get_string_descriptor_ascii(deviceHandle, (uint8_t) (0xFF & index), name, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) name);
     free(name);
     return retval;
@@ -32,9 +37,6 @@ Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type,
         return NULL;
     }
 
-    // Claim the control interface
-    //libusb_claim_interface(deviceHandle, 0);
-
     return ((*env)->NewDirectByteBuffer(env, (void *) deviceHandle, sizeof(struct libusb_device_handle)));
 }
 
@@ -48,7 +50,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetManufacturerString(JNIEnv *
 
     size_t length = 50 * sizeof(unsigned char);
     unsigned char *name = malloc(length);
-    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iManufacturer, name, length);
+    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iManufacturer, name, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) name);
     free(name);
     return retval;
@@ -65,7 +67,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetProductNameString(JNIEnv *e
 
     size_t length = 50 * sizeof(unsigned char);
     unsigned char *name = malloc(length);
-    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iProduct, name, length);
+    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iProduct, name, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) name);
     free(name);
     return retval;
@@ -77,7 +79,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, 
             (*env)->GetDirectBufferAddress(env, descriptor);
     uint16_t bcdDevice = deviceDescriptor->bcdDevice;
     size_t length = 4 * sizeof(unsigned char);
-    unsigned char *version = malloc(length);
+    char *version = malloc(length);
     snprintf(version, length, "%i.%i", 0xFF & (bcdDevice >> 8), 0xFF & bcdDevice);
     jstring retval = (*env)->NewStringUTF(env, (const char *) version);
     free(version);
@@ -111,3 +113,4 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetNativeObjectFromPointer(JNI
 
     return ((*env)->NewDirectByteBuffer(env, (void *) deviceHandle, sizeof(struct libusb_device_handle)));
 }
+#pragma clang diagnostic pop

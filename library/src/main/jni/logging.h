@@ -10,4 +10,8 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR  , LOG_TAG,__VA_ARGS__)
 #define LOGSIMPLE(...)
 
+void log_dump(const char *tag, const void *addr, int len, int linelen);
+
+void log_dumpf(const char *tag, const char *fmt, const void *addr, int len, int linelen);
+
 #endif //LOGGING_H

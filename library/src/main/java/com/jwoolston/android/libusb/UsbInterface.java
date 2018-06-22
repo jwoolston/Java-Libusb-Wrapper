@@ -15,13 +15,10 @@
  */
 package com.jwoolston.android.libusb;
 
-import android.nfc.Tag;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
-
 import com.jwoolston.android.libusb.util.Preconditions;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -147,11 +144,13 @@ public class UsbInterface implements Parcelable {
                                                   ",name=" + name + ",interfaceClass=" + interfaceClass +
                                                   ",subclass=" + subclass + ",protocol=" + protocol +
                                                   ",endpoints=[");
-        for (int i = 0; i < endpoints.length; i++) {
-            builder.append("\n");
-            builder.append(endpoints[i].toString());
+        if (endpoints != null) {
+            for (int i = 0; i < endpoints.length; i++) {
+                builder.append("\n");
+                builder.append(endpoints[i].toString());
+            }
+            builder.append("]");
         }
-        builder.append("]");
         return builder.toString();
     }
 
@@ -213,11 +212,9 @@ public class UsbInterface implements Parcelable {
     @Nullable
     private static UsbInterface fromNativeDescriptor(@NonNull UsbDevice device, @NonNull ByteBuffer nativeObject,
                                                      int index) {
-        Log.i("UsbConf", "Device: " + device + " nativeInterface: " + nativeObject + " Index: " + index);
         final ByteBuffer nativeDescriptor = nativeGetInterfaceDescriptor(nativeObject, index);
 
         if (nativeDescriptor == null) {
-            Log.e("UsbConf", "Native descriptor was null!");
             return null;
         }
 
@@ -231,12 +228,14 @@ public class UsbInterface implements Parcelable {
         final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
         final UsbInterface usbInterface = new UsbInterface(id, alternateSetting, name, interfaceClass, subclass,
                                                           protocol);
-        Log.v("UsbConf", "UsbInterface: " + usbInterface + " Endpoint count: " + numEndpoints);
         final UsbEndpoint[] endpoints = new UsbEndpoint[numEndpoints];
         for (int i = 0; i < numEndpoints; ++i) {
             final ByteBuffer nativeEndpoint = nativeGetEndpoint(nativeDescriptor, i);
             if (nativeEndpoint != null) {
                 endpoints[i] = UsbEndpoint.fromNativeObject(nativeEndpoint);
+            } else {
+                throw new IllegalStateException("Received a null endpoint when one was expected. Expected index: " +
+                                                i + " Expected total: " + numEndpoints);
             }
         }
         usbInterface.setEndpoints(endpoints);

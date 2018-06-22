@@ -17,8 +17,10 @@
 
 package com.jwoolston.android.libusb.msc_test_core.driver.scsi;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.jwoolston.android.libusb.async.BulkTransferCallback;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.CommandBlockWrapper;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.CommandStatusWrapper;
@@ -42,9 +44,9 @@ import java.util.Arrays;
  *
  * @author mjahnen
  */
-public class ScsiBlockDevice implements BlockDeviceDriver {
+public class AsyncScsiBlockDevice implements BlockDeviceDriver {
 
-	private static final String TAG = ScsiBlockDevice.class.getSimpleName();
+	private static final String TAG = AsyncScsiBlockDevice.class.getSimpleName();
 
 	private UsbCommunication usbCommunication;
 	private ByteBuffer outBuffer;
@@ -57,7 +59,7 @@ public class ScsiBlockDevice implements BlockDeviceDriver {
 	private ScsiRead10 readCommand = new ScsiRead10();
 	private CommandStatusWrapper csw = new CommandStatusWrapper();
 
-	public ScsiBlockDevice(UsbCommunication usbCommunication) {
+	public AsyncScsiBlockDevice(UsbCommunication usbCommunication) {
 		this.usbCommunication = usbCommunication;
 		outBuffer = ByteBuffer.allocate(31);
 		cswBuffer = ByteBuffer.allocate(CommandStatusWrapper.SIZE);
@@ -124,20 +126,29 @@ public class ScsiBlockDevice implements BlockDeviceDriver {
 	 * @throws IOException
 	 *             If something fails.
 	 */
-	private boolean transferCommand(CommandBlockWrapper command, ByteBuffer inBuffer)
+	private boolean transferCommand(final CommandBlockWrapper command, ByteBuffer inBuffer)
 			throws IOException {
-		byte[] outArray = outBuffer.array();
+		final byte[] outArray = outBuffer.array();
 		Arrays.fill(outArray, (byte) 0);
 
 		outBuffer.clear();
 		command.serialize(outBuffer);
 		outBuffer.clear();
 
-		int written = usbCommunication.bulkOutTransfer(outBuffer);
-		if (written != outArray.length) {
-			throw new IOException("Writing all bytes on command " + command + " failed!");
-		}
+		usbCommunication.asyncBulkOutTransfer(new BulkTransferCallback() {
+			@Override
+			public void onBulkTransferComplete(@Nullable ByteBuffer data, int result) {
+				if (result != outArray.length) {
+					try {
+						throw new IOException("Writing all bytes on command " + command + " failed!");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}, outBuffer);
 
+		int written;
 		int transferLength = command.getdCbwDataTransferLength();
 		int read = 0;
 		if (transferLength > 0) {

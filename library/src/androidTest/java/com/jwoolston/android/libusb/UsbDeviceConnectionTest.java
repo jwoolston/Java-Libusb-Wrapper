@@ -1,20 +1,19 @@
 package com.jwoolston.android.libusb;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.RequiresDevice;
 import android.support.test.runner.AndroidJUnit4;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Jared Woolston (Jared.Woolston@gmail.com)
@@ -31,6 +30,8 @@ public class UsbDeviceConnectionTest extends USBTestCase {
     @Test
     public void initialize() {
         try {
+            // We need to instantiate the Usb Manager to be sure the native library is loaded.
+            UsbManager usbManager = new UsbManager(InstrumentationRegistry.getTargetContext());
             UsbDeviceConnection.initialize();
         } catch (RuntimeException e) {
             assertFalse("Exception thrown during UsbDeviceConnection initialization.", true);
