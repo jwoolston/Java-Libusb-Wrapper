@@ -19,6 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -26,7 +27,7 @@ import java.util.Map.Entry;
 /**
  * This class allows you to access the state of USB and communicate with USB devices.
  * Currently only host mode is supported in the public API.
- *
+ * <p>
  * This class API is based on the Android {@link android.hardware.usb.UsbManager} class.
  *
  * @author Jared Woolston (Jared.Woolston@gmail.com)
@@ -39,11 +40,15 @@ public class UsbManager {
 
     private static final String TAG = "LibUSB UsbManager";
 
-    private final Context                         context;
+    private final Object cacheLock = new Object();
+
+    private final Context context;
     private final android.hardware.usb.UsbManager androidUsbManager;
-    private final HashMap<String, UsbDevice>           localDeviceCache     = new HashMap<>();
+    private final HashMap<String, UsbDevice> localDeviceCache = new HashMap<>();
     private final HashMap<String, UsbDeviceConnection> localConnectionCache = new HashMap<>();
     private final LibUsbContext libUsbContext;
+
+    private volatile AsyncUSBThread asyncUsbThread;
 
     @Nullable
     private native ByteBuffer nativeInitialize();
@@ -54,6 +59,7 @@ public class UsbManager {
         this.context = context.getApplicationContext();
         androidUsbManager = (android.hardware.usb.UsbManager) context.getSystemService(Context.USB_SERVICE);
         libUsbContext = new LibUsbContext(nativeInitialize());
+        UsbDeviceConnection.initialize();
     }
 
     public void destroy() {
@@ -64,30 +70,37 @@ public class UsbManager {
 
     @NonNull
     public UsbDeviceConnection registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws
-                                                                                              DevicePermissionDenied {
-        final String key = device.getDeviceName();
-        if (localConnectionCache.containsKey(key)) {
-            // We have already dealt with this device, do nothing
-            Log.d(TAG, "returning cached device.");
-            return localConnectionCache.get(key);
-        } else {
-            android.hardware.usb.UsbDeviceConnection connection = androidUsbManager.openDevice(device);
-            if (connection == null) {
-                throw new DevicePermissionDenied(device);
+        DevicePermissionDenied {
+        synchronized (cacheLock) {
+            final String key = device.getDeviceName();
+            if (localConnectionCache.containsKey(key)) {
+                // We have already dealt with this device, do nothing
+                Log.d(TAG, "returning cached device.");
+                return localConnectionCache.get(key);
+            } else {
+                android.hardware.usb.UsbDeviceConnection connection = androidUsbManager.openDevice(device);
+                if (connection == null) {
+                    throw new DevicePermissionDenied(device);
+                }
+                final UsbDevice usbDevice = UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
+                final UsbDeviceConnection usbConnection = UsbDeviceConnection.fromAndroidConnection(context, this,
+                    usbDevice);
+                localDeviceCache.put(key, usbDevice);
+                localConnectionCache.put(key, usbConnection);
+
+                usbDevice.populate();
+                return usbConnection;
             }
-            final UsbDevice usbDevice = UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
-            final UsbDeviceConnection usbConnection = UsbDeviceConnection.fromAndroidConnection(context, this,
-                                                                                                usbDevice);
-            localDeviceCache.put(key, usbDevice);
-            localConnectionCache.put(key, usbConnection);
-            return usbConnection;
         }
     }
 
-    public void unregisterDevice(@NonNull UsbDevice device) {
-        final String key = device.getDeviceName();
-        localConnectionCache.remove(key);
-        localDeviceCache.remove(key);
+    void unregisterDevice(@NonNull UsbDevice device) {
+        synchronized (cacheLock) {
+            final String key = device.getDeviceName();
+            localConnectionCache.remove(key);
+            localDeviceCache.remove(key);
+            onDeviceClosed();
+        }
     }
 
     /**
@@ -98,10 +111,43 @@ public class UsbManager {
      * @return {@link HashMap} containing all connected USB devices.
      */
     public HashMap<String, UsbDevice> getDeviceList() {
-        final HashMap<String, UsbDevice> map = new HashMap<>();
-        for (Entry<String, UsbDevice> entry : localDeviceCache.entrySet()) {
-            map.put(entry.getKey(), entry.getValue());
+        synchronized (cacheLock) {
+            final HashMap<String, UsbDevice> map = new HashMap<>();
+            for (Entry<String, UsbDevice> entry : localDeviceCache.entrySet()) {
+                map.put(entry.getKey(), entry.getValue());
+            }
+            return map;
         }
-        return map;
+    }
+
+    void onClosingDevice() {
+        synchronized (cacheLock) {
+            if (localConnectionCache.size() == 1) {
+                // We need to shutdown the async communication thread if it is running
+                if (asyncUsbThread != null) {
+                    asyncUsbThread.shutdown();
+                }
+            }
+        }
+    }
+
+    void onDeviceClosed() {
+        synchronized (cacheLock) {
+            if (localConnectionCache.size() == 0) {
+                try {
+                    asyncUsbThread.join();
+                    asyncUsbThread = null;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    void startAsyncIfNeeded() {
+        if (asyncUsbThread == null) {
+            asyncUsbThread = new AsyncUSBThread(libUsbContext);
+            asyncUsbThread.start();
+        }
     }
 }

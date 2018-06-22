@@ -19,7 +19,7 @@ public class LibUsbContext {
     }
 
     @NonNull
-    ByteBuffer getNativeObject() {
+    public ByteBuffer getNativeObject() {
         return nativeObject;
     }
 }

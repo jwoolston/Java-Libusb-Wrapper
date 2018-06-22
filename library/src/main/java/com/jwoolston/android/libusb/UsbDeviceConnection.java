@@ -16,15 +16,16 @@
 package com.jwoolston.android.libusb;
 
 import android.content.Context;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.jwoolston.android.libusb.util.Preconditions;
+import com.jwoolston.android.libusb.async.AsyncTransfer;
+import com.jwoolston.android.libusb.async.BulkTransferCallback;
+import com.jwoolston.android.libusb.async.ControlTransferCallback;
+import com.jwoolston.android.libusb.async.InterruptTransferCallback;
+import com.jwoolston.android.libusb.async.IsochronousTransferCallback;
 
-import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.TimeoutException;
 
 /**
  * This class is used for sending and receiving data and control messages to a USB device. nstances of this class are
@@ -35,9 +36,15 @@ public class UsbDeviceConnection {
     private static final String TAG = "UsbDeviceConnection";
 
     private final UsbManager manager;
-    private final UsbDevice  device;
+    private final UsbDevice device;
 
     private Context context;
+
+    static void initialize() {
+        if (!nativeInitialize()) {
+            throw new RuntimeException("Failed to initialize native layer for UsbDeviceConnection.");
+        }
+    }
 
     @NonNull
     static UsbDeviceConnection fromAndroidConnection(@NonNull Context context, @NonNull UsbManager manager,
@@ -63,11 +70,20 @@ public class UsbDeviceConnection {
     }
 
     /**
+     * @return The device this connection is for.
+     */
+    @NonNull
+    public UsbDevice getDevice() {
+        return device;
+    }
+
+    /**
      * Releases all system resources related to the device. Once the object is closed it cannot be used again. The
      * client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again to retrieve a new
      * instance to reestablish communication with the device.
      */
     public void close() {
+        manager.onClosingDevice();
         nativeClose(device.getNativeObject());
         manager.unregisterDevice(device);
     }
@@ -123,7 +139,7 @@ public class UsbDeviceConnection {
      */
     public LibusbError setInterface(UsbInterface intf) {
         return LibusbError.fromNative(nativeSetInterface(device.getNativeObject(), intf.getId(),
-                                                         intf.getAlternateSetting()));
+            intf.getAlternateSetting()));
     }
 
     /**
@@ -183,7 +199,7 @@ public class UsbDeviceConnection {
                                int length, int timeout) {
         checkBounds(buffer, offset, length);
         return nativeControlRequest(device.getNativeObject(), requestType, request, value, index, buffer, offset,
-                                    length, timeout);
+            length, timeout);
     }
 
     /**
@@ -224,80 +240,206 @@ public class UsbDeviceConnection {
     }
 
     /**
+     * Performs an interrupt transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #interruptTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive; can be {@code null} to wait for next
+     *                 transaction without reading data
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int interruptTransfer(UsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
+        return interruptTransfer(endpoint, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an interrupt transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
+     *
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive
+     * @param offset   the index of the first byte in the buffer to send or receive
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int interruptTransfer(UsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        return nativeInterruptRequest(device.getNativeObject(), endpoint.getAddress(), buffer, offset, length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous control transaction on endpoint zero for this device. The direction of the transfer is
+     * determined by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
+     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
+     * then the transfer is a read.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #controlTransferAsync(ControlTransferCallback, int, int, int, int, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param callback    callback to be notified when transfer completes.
+     * @param requestType request type for this transaction
+     * @param request     request ID for this transaction
+     * @param value       value field for this transaction
+     * @param index       index field for this transaction
+     * @param buffer      buffer for data portion of transaction,
+     *                    or null if no data needs to be sent or received
+     * @param length      the length of the data to send or receive
+     * @param timeout     in milliseconds
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
+                                    int index, byte[] buffer, int length, int timeout) {
+        return controlTransferAsync(callback, requestType, request, value, index, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous control transaction on endpoint zero for this device. The direction of the transfer is
+     * determined by the request type. If requestType & {@link UsbConstants#USB_ENDPOINT_DIR_MASK} is
+     * {@link UsbConstants#USB_DIR_OUT}, then the transfer is a write, and if it is {@link UsbConstants#USB_DIR_IN},
+     * then the transfer is a read.
+     *
+     * @param callback    callback to be notified when transfer completes.
+     * @param requestType request type for this transaction
+     * @param request     request ID for this transaction
+     * @param value       value field for this transaction
+     * @param index       index field for this transaction
+     * @param buffer      buffer for data portion of transaction,
+     *                    or null if no data needs to be sent or received
+     * @param offset      the index of the first byte in the buffer to send or receive
+     * @param length      the length of the data to send or receive
+     * @param timeout     in milliseconds
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
+                                    int index, byte[] buffer, int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        manager.startAsyncIfNeeded();
+        final int result = nativeControlRequestAsync(device.getNativeObject(), callback, requestType, request, value,
+            index, buffer, offset, length, timeout);
+        return result;
+    }
+
+    /**
+     * Performs an asynchronous bulk transaction on the given endpoint. The direction of the transfer is determined by the
+     * direction of the endpoint.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #bulkTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param callback    callback to be notified when transfer completes.
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive; can be {@code null} to wait for next
+     *                 transaction without reading data
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public LibusbError bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+                                         int length, int timeout) {
+        return bulkTransferAsync(callback, endpoint, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous bulk transaction on the given endpoint. The direction of the transfer is determined by
+     * the direction of the endpoint.
+     *
+     * @param callback    callback to be notified when transfer completes.
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive
+     * @param offset   the index of the first byte in the buffer to send or receive
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public LibusbError bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+                                         int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        manager.startAsyncIfNeeded();
+        return LibusbError.fromNative(nativeBulkRequestAsync(device.getNativeObject(), callback, endpoint.getAddress(), buffer, offset,
+            length, timeout));
+    }
+
+    /**
+     * Performs an asynchronous interrupt transaction on the given endpoint. The direction of the transfer is determined
+     * by the direction of the endpoint.
+     * <p>
+     * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
+     * {@link #interruptTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * </p>
+     *
+     * @param callback    callback to be notified when transfer completes.
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive; can be {@code null} to wait for next
+     *                 transaction without reading data
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int interruptTransferAsync(@NonNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+                                      int length, int timeout) {
+        return interruptTransferAsync(callback, endpoint, buffer, 0, length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous interrupt transaction on the given endpoint. The direction of the transfer is determined
+     * by the direction of the endpoint.
+     *
+     * @param callback    callback to be notified when transfer completes.
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive
+     * @param offset   the index of the first byte in the buffer to send or receive
+     * @param length   the length of the data to send or receive
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int interruptTransferAsync(@NonNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+                                      int offset, int length, int timeout) {
+        checkBounds(buffer, offset, length);
+        return nativeInterruptRequestAsync(callback, device.getNativeObject(), endpoint.getAddress(), buffer, offset,
+            length, timeout);
+    }
+
+    /**
+     * Performs an asynchronous isochronous transaction on the given endpoint. The direction of the transfer is determined
+     * by the direction of the endpoint.
+     *
+     * @param callback callback to be notified when transfer completes.
+     * @param endpoint the endpoint for this transaction
+     * @param buffer   buffer for data to send or receive. The buffer's position will be honored.
+     * @param timeout  in milliseconds, 0 is infinite
+     *
+     * @return length of data transferred (or zero) for success, or negative value for failure
+     */
+    public int isochronousTransfer(@NonNull IsochronousTransferCallback callback, @NonNull AsyncTransfer transfer,
+                                   UsbEndpoint endpoint, ByteBuffer buffer, int timeout) {
+        return nativeIsochronousRequestAsync(callback, device.getNativeObject(), transfer.getNativeObject(),
+            endpoint.getAddress(), buffer, buffer.position(), timeout);
+    }
+
+    /**
      * Reset USB port for the connected device.
      *
      * @return {@link LibusbError} The libusb result.
      */
     public LibusbError resetDevice() {
         return LibusbError.fromNative(nativeResetDevice(device.getNativeObject()));
-    }
-
-    //TODO: Implement the usbrequest async methods
-
-    /**
-     * Waits for the result of a {@link UsbRequest#queue} operation
-     * <p>Note that this may return requests queued on multiple
-     * {@link android.hardware.usb.UsbEndpoint}s. When multiple endpoints are in use,
-     * {@link android.hardware.usb.UsbRequest#getEndpoint} and {@link
-     * android.hardware.usb.UsbRequest#getClientData} can be useful in determining how to process
-     * the result of this function.</p>
-     *
-     * @return a completed USB request, or null if an error occurred
-     *
-     * @throws IllegalArgumentException Before API {@value Build.VERSION_CODES#O}: if the number of
-     *                                  bytes read or written is more than the limit of the
-     *                                  request's buffer. The number of bytes is determined by the
-     *                                  {@code length} parameter of
-     *                                  {@link UsbRequest#queue(ByteBuffer, int)}
-     * @throws BufferOverflowException  In API {@value Build.VERSION_CODES#O} and after: if the
-     *                                  number of bytes read or written is more than the limit of the
-     *                                  request's buffer. The number of bytes is determined by the
-     *                                  {@code length} parameter of
-     *                                  {@link UsbRequest#queue(ByteBuffer, int)}
-     */
-    public UsbRequest requestWait() {
-        UsbRequest request = null;
-        try {
-            // -1 is special value indicating infinite wait
-            request = native_request_wait(-1);
-        } catch (TimeoutException e) {
-            // Does not happen, infinite timeout
-        }
-        if (request != null) {
-            request.dequeue(
-                    context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O);
-        }
-        return request;
-    }
-
-    /**
-     * Waits for the result of a {@link android.hardware.usb.UsbRequest#queue} operation
-     * <p>Note that this may return requests queued on multiple
-     * {@link android.hardware.usb.UsbEndpoint}s. When multiple endpoints are in use,
-     * {@link android.hardware.usb.UsbRequest#getEndpoint} and {@link
-     * android.hardware.usb.UsbRequest#getClientData} can be useful in determining how to process
-     * the result of this function.</p>
-     * <p>Android processes {@link UsbRequest UsbRequests} asynchronously. Hence it is not
-     * guaranteed that {@link #requestWait(long) requestWait(0)} returns a request that has been
-     * queued right before even if the request could have been processed immediately.</p>
-     *
-     * @param timeout timeout in milliseconds. If 0 this method does not wait.
-     *
-     * @return a completed USB request, or {@code null} if an error occurred
-     *
-     * @throws BufferOverflowException if the number of bytes read or written is more than the
-     *                                 limit of the request's buffer. The number of bytes is
-     *                                 determined by the {@code length} parameter of
-     *                                 {@link UsbRequest#queue(ByteBuffer, int)}
-     * @throws TimeoutException        if no request was received in {@code timeout} milliseconds.
-     */
-    public UsbRequest requestWait(long timeout) throws TimeoutException {
-        timeout = Preconditions.checkArgumentNonnegative(timeout, "timeout");
-        UsbRequest request = native_request_wait(timeout);
-        if (request != null) {
-            request.dequeue(true);
-        }
-        return request;
     }
 
     /**
@@ -317,6 +459,8 @@ public class UsbDeviceConnection {
         }
     }
 
+    private static native boolean nativeInitialize();
+
     private native void nativeClose(@NonNull ByteBuffer device);
 
     @Nullable
@@ -333,11 +477,26 @@ public class UsbDeviceConnection {
     private native int nativeControlRequest(@NonNull ByteBuffer device, int requestType, int request, int value,
                                             int index, byte[] buffer, int offset, int length, int timeout);
 
+    private native int nativeControlRequestAsync(@NonNull ByteBuffer device, @NonNull ControlTransferCallback callback,
+                                                 int requestType, int request, int value, int index, byte[] buffer,
+                                                 int offset, int length, int timeout);
+
+    private native int nativeBulkRequestAsync(@NonNull ByteBuffer device, @NonNull BulkTransferCallback callback,
+                                              int address, byte[] buffer, int offset, int length, int timeout);
+
+    private native int nativeInterruptRequestAsync(@NonNull InterruptTransferCallback callback,
+                                                   @NonNull ByteBuffer device, int address, byte[] buffer,
+                                                   int offset, int length, int timeout);
+
+    private native int nativeIsochronousRequestAsync(@NonNull IsochronousTransferCallback callback,
+                                                     @NonNull ByteBuffer device, @NonNull ByteBuffer transfer,
+                                                     int address, @NonNull ByteBuffer buffer, int length, int timeout);
+
     private native int nativeBulkRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
                                          int length, int timeout);
 
-    private native int nativeResetDevice(@NonNull ByteBuffer device);
+    private native int nativeInterruptRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
+                                              int length, int timeout);
 
-    //TODO
-    private native UsbRequest native_request_wait(long timeout) throws TimeoutException;
+    private native int nativeResetDevice(@NonNull ByteBuffer device);
 }
