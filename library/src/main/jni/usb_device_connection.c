@@ -79,6 +79,8 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
     jobject byteBuffer = NULL;
 
     //TODO: error checking on allocation for data and if the transfer actually did anything.
+    //TODO: the buffers allocated here need to be freed by native code. Probably want to change how this API works to
+    // use a provided buffer from java
 
     if (result >= 0) {
         switch (transfer->type) {
