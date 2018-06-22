@@ -63,7 +63,7 @@ public enum LibusbError {
     }
 
     @NonNull
-    static LibusbError fromNative(int code) {
+    public static LibusbError fromNative(int code) {
         for (LibusbError error : values()) {
             if (error.code == code) {
                 return error;

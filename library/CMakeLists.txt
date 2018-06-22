@@ -38,8 +38,10 @@ add_library(
     SHARED
 
     # Provides a relative path to your source file(s).
+    src/main/jni/async_transfer.c
     src/main/jni/async_usb_thread.c
     src/main/jni/common.h
+    src/main/jni/isochronous_async_transfer.c
     src/main/jni/libusb_device_descriptor.c
     src/main/jni/libusb_error_enum.c
     src/main/jni/logging.c

@@ -367,11 +367,20 @@ public class UsbDevice implements Parcelable {
         interfaces = in.createTypedArray(UsbInterface.CREATOR);
     }
 
+    /**
+     * Retrieves the {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native.
+     *
+     * @return The {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native.
+     */
     @NonNull
-    ByteBuffer getNativeObject() {
+    public ByteBuffer getNativeObject() {
         return nativeObject;
     }
 
+    /**
+     * Populates the internal data structures of this device which include the {@link UsbConfiguration}s,
+     * the {@link UsbInterface}s and {@link UsbEndpoint}s.
+     */
     void populate() {
         final int numConfigurations = nativeGetConfigurationCount(getNativeObject());
         final UsbConfiguration[] configurations = new UsbConfiguration[numConfigurations];
@@ -381,6 +390,12 @@ public class UsbDevice implements Parcelable {
         setConfigurations(configurations);
     }
 
+    /**
+     * Sets the available configurations for this device. Only expected to be called by the {@link UsbDevice#populate()}
+     * method.
+     *
+     * @param configuration Array of {@link UsbConfiguration}s. Must not be {@code null} or contain {@code null}s.
+     */
     void setConfigurations(@NonNull UsbConfiguration[] configuration) {
         configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
     }
