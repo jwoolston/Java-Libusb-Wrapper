@@ -217,11 +217,19 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeGetRawDescriptor(JNI
     if (ret) {
         jbyte *bytes = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, ret, 0);
         if (bytes) {
-            memcpy(bytes, buffer, length);
+            memcpy(bytes, buffer, (size_t) length);
             (*env)->ReleasePrimitiveArrayCritical(env, ret, bytes, 0);
         }
     }
     return ret;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClearStall(JNIEnv *env, jobject instance, jobject device,
+                                                                       jint address) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    return libusb_clear_halt(deviceHandle, (unsigned char) address);
 }
 
 JNIEXPORT jint JNICALL

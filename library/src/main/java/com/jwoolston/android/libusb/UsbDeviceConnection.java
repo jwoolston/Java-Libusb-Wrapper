@@ -26,6 +26,7 @@ import com.jwoolston.android.libusb.async.InterruptTransferCallback;
 import com.jwoolston.android.libusb.async.IsochronousTransferCallback;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * This class is used for sending and receiving data and control messages to a USB device. nstances of this class are
@@ -107,6 +108,16 @@ public class UsbDeviceConnection {
     @Nullable
     public byte[] getRawDescriptors() {
         return nativeGetRawDescriptor(device.getFileDescriptor());
+    }
+
+    /**
+     * Clears the stall condition on the provided {@link UsbEndpoint}.
+     *
+     * @param endpoint The {@link UsbEndpoint} which should be cleared.
+     * @return {@link LibusbError} The libusb result.
+     */
+    public LibusbError clearStall(@NonNull UsbEndpoint endpoint) {
+        return LibusbError.fromNative(nativeClearStall(device.getNativeObject(), endpoint.getAddress()));
     }
 
     /**
@@ -465,6 +476,8 @@ public class UsbDeviceConnection {
 
     @Nullable
     private native byte[] nativeGetRawDescriptor(int fd);
+
+    private native int nativeClearStall(@NonNull ByteBuffer device, int address);
 
     private native int nativeClaimInterface(@NonNull ByteBuffer device, int interfaceID, boolean force);
 
