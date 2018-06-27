@@ -15,21 +15,22 @@ import java.nio.ByteBuffer;
  */
 public class IsochronousAsyncTransfer extends AsyncTransfer {
 
-    private static final String TAG = "ScsiMscAsyncUnit";
+    private static final String TAG = "IsochronousAsyncTransfer";
 
     private final IsochronousTransferCallback callback;
-    private final UsbDeviceConnection connection;
-    private final int packetCount;
-    private final int packetSize;
+    private final UsbDeviceConnection         connection;
+    private final int                         packetCount;
+    private final int                         packetSize;
 
     public IsochronousAsyncTransfer(@NonNull IsochronousTransferCallback callback, @NonNull UsbEndpoint endpoint,
                                     @NonNull UsbDeviceConnection connection, @NonNull ByteBuffer data, int packetCount)
-        throws IOException {
+            throws IOException {
         super(endpoint, data);
         this.callback = callback;
         this.connection = connection;
         setNativeObject(nativeAllocate(packetCount));
-        int size = nativeSetupPackets(connection.getDevice().getNativeObject(), getNativeObject(), endpoint.getAddress());
+        int size = nativeSetupPackets(connection.getDevice().getNativeObject(), getNativeObject(),
+                                      endpoint.getAddress());
         LibusbError result = size > 0 ? LibusbError.LIBUSB_SUCCESS : LibusbError.fromNative(size);
         if (result != LibusbError.LIBUSB_SUCCESS) {
             throw new IOException("Failed to setup packets: " + result);
@@ -38,17 +39,22 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
         packetSize = size;
     }
 
-    public void submit(@NonNull ByteBuffer buffer, int timeout) {
+    public void submit(@NonNull ByteBuffer buffer, int timeout) throws IllegalStateException {
         if (!buffer.isDirect()) {
             throw new IllegalArgumentException("ByteBuffers passed to this method must be direct allocations.");
         }
 
         if ((packetCount * packetSize) > buffer.capacity()) {
             throw new IllegalArgumentException("The provided byte buffer is of insufficient capacity. Required: "
-                + (packetSize * packetCount) + " Bytes. Provided: " + buffer.capacity() + " Bytes.");
+                                               + (packetSize * packetCount) + " Bytes. Provided: " + buffer.capacity()
+                                               + " Bytes.");
         }
 
-        connection.isochronousTransfer(callback, this, getEndpoint(), buffer, timeout);
+        LibusbError result = LibusbError.fromNative(connection.isochronousTransfer(callback, this, getEndpoint(),
+                                                                                   buffer, timeout));
+        if (result != LibusbError.LIBUSB_SUCCESS) {
+            throw new IllegalStateException("Failed to submit isochronous transfer: " + result);
+        }
     }
 
     @Nullable
