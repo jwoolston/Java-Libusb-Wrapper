@@ -26,7 +26,8 @@ struct transfer_callback_holder {
 
 static struct transfer_callback_holder *allocate_callback_holder(jobject *callback, JNIEnv *env, bool cleanup) {
     struct transfer_callback_holder *holder = malloc(sizeof(struct transfer_callback_holder));
-    holder->callback = callback;
+    // TODO: Is this the most efficient way to do this (deleting on processing callback)
+    holder->callback = (*env)->NewGlobalRef(env, callback);
     JavaVM *vm;
     (*env)->GetJavaVM(env, &vm);
     holder->vm = vm;
@@ -141,6 +142,7 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
         }
     }
     // We must always free our callback holder
+    (*env)->DeleteGlobalRef(env, holder->callback);
     free(holder);
 }
 
