@@ -21,9 +21,9 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
     private final int                         packetSize;
 
     public IsochronousAsyncTransfer(@NonNull IsochronousTransferCallback callback, @NonNull UsbEndpoint endpoint,
-                                    @NonNull UsbDeviceConnection connection, @NonNull ByteBuffer data, int packetCount)
+                                    @NonNull UsbDeviceConnection connection, int packetCount)
             throws IOException {
-        super(endpoint, data);
+        super(endpoint);
         this.callback = callback;
         this.connection = connection;
         setNativeObject(nativeAllocate(packetCount));

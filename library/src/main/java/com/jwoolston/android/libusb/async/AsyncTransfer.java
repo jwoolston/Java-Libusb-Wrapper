@@ -10,16 +10,14 @@ import java.nio.ByteBuffer;
 /**
  * @author Jared Woolston (Jared.Woolston@gmail.com)
  */
-public class AsyncTransfer {
+public abstract class AsyncTransfer {
 
     private final UsbEndpoint endpoint;
-    private final ByteBuffer data;
 
     private ByteBuffer nativeObject;
 
-    public AsyncTransfer(@NonNull UsbEndpoint endpoint, @NonNull ByteBuffer data) {
+    public AsyncTransfer(@NonNull UsbEndpoint endpoint) {
         this.endpoint = endpoint;
-        this.data = data;
     }
 
     protected void setNativeObject(@Nullable ByteBuffer nativeObject) {
@@ -40,11 +38,6 @@ public class AsyncTransfer {
     @NonNull
     public UsbEndpoint getEndpoint() {
         return endpoint;
-    }
-
-    @NonNull
-    public ByteBuffer getData() {
-        return data;
     }
 
     @Override
