@@ -1,7 +1,7 @@
 package com.jwoolston.android.libusb.async;
 
 import android.support.annotation.Nullable;
-
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -9,5 +9,5 @@ import java.nio.ByteBuffer;
  */
 public interface BulkTransferCallback {
 
-    void onBulkTransferComplete(@Nullable ByteBuffer data, int result);
+    void onBulkTransferComplete(@Nullable ByteBuffer data, int result) throws IOException;
 }
