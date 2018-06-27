@@ -2,11 +2,9 @@ package com.jwoolston.android.libusb.async;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.jwoolston.android.libusb.LibusbError;
 import com.jwoolston.android.libusb.UsbDeviceConnection;
 import com.jwoolston.android.libusb.UsbEndpoint;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 

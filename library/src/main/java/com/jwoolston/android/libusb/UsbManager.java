@@ -152,6 +152,7 @@ public class UsbManager {
 
     void startAsyncIfNeeded() {
         if (asyncUsbThread == null) {
+            Log.d(TAG, "Starting async usb thread.");
             asyncUsbThread = new AsyncUSBThread(libUsbContext);
             asyncUsbThread.start();
         }

@@ -423,6 +423,7 @@ public class UsbDeviceConnection {
     public int interruptTransferAsync(@NonNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                       int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
+        manager.startAsyncIfNeeded();
         return nativeInterruptRequestAsync(callback, device.getNativeObject(), endpoint.getAddress(), buffer, offset,
             length, timeout);
     }
@@ -440,6 +441,7 @@ public class UsbDeviceConnection {
      */
     public int isochronousTransfer(@NonNull IsochronousTransferCallback callback, @NonNull AsyncTransfer transfer,
                                    UsbEndpoint endpoint, ByteBuffer buffer, int timeout) {
+        manager.startAsyncIfNeeded();
         return nativeIsochronousRequestAsync(callback, device.getNativeObject(), transfer.getNativeObject(),
             endpoint.getAddress(), buffer, buffer.capacity(), timeout);
     }
