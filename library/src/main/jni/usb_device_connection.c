@@ -334,11 +334,6 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequestAsync(
                                                                                 jint length, jint timeout) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-
-    if (usbi_handling_events(HANDLE_CTX(deviceHandle))) {
-        return LIBUSB_ERROR_BUSY;
-    }
-
     // Allocate the transfer
     struct libusb_transfer *transfer = libusb_alloc_transfer(0);
     jbyte *buffer = NULL;
@@ -406,10 +401,6 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequestAsync(JNI
                                                                              jint offset, jint length, jint timeout) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-    if (usbi_handling_events(HANDLE_CTX(deviceHandle))) {
-        return LIBUSB_ERROR_BUSY;
-    }
-
     // Allocate the transfer
     struct libusb_transfer *transfer = libusb_alloc_transfer(0);
     jbyte *buffer = NULL;
@@ -472,9 +463,6 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequestAsyn
                                                                                   jint length, jint timeout) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-    if (usbi_handling_events(HANDLE_CTX(deviceHandle))) {
-        return LIBUSB_ERROR_BUSY;
-    }
 
     // Allocate the transfer
     struct libusb_transfer *transfer = libusb_alloc_transfer(0);
@@ -519,10 +507,6 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeIsochronousRequestAs
                                                                                     jint timeout) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-    if (usbi_handling_events(HANDLE_CTX(deviceHandle))) {
-        return LIBUSB_ERROR_BUSY;
-    }
-
     struct libusb_transfer *_transfer = (struct libusb_transfer *) (*env)->GetDirectBufferAddress(env, transfer);
     unsigned char *_buffer = (*env)->GetDirectBufferAddress(env, buffer);
     _transfer->buffer = _buffer;
