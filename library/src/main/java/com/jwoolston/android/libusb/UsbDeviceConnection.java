@@ -441,7 +441,7 @@ public class UsbDeviceConnection {
     public int isochronousTransfer(@NonNull IsochronousTransferCallback callback, @NonNull AsyncTransfer transfer,
                                    UsbEndpoint endpoint, ByteBuffer buffer, int timeout) {
         return nativeIsochronousRequestAsync(callback, device.getNativeObject(), transfer.getNativeObject(),
-            endpoint.getAddress(), buffer, buffer.position(), timeout);
+            endpoint.getAddress(), buffer, buffer.capacity(), timeout);
     }
 
     /**
