@@ -10,6 +10,7 @@ JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeAllocate(JNIEnv *env, jobject instance,
                                                                             jint numberPackets) {
     struct libusb_transfer *transfer = libusb_alloc_transfer(numberPackets);
+    transfer->num_iso_packets = numberPackets;
     transfer->type = LIBUSB_TRANSFER_TYPE_ISOCHRONOUS;
     return ((*env)->NewDirectByteBuffer(env, (void *) transfer, sizeof(struct libusb_transfer)));
 }
