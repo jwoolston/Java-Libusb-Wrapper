@@ -32,7 +32,8 @@ public class AsyncUSBThread extends Thread {
     public void run() {
         while(keepRunning) {
             try {
-                nativeHandleEvents(context.getNativeObject());
+                LibusbError result = LibusbError.fromNative(nativeHandleEvents(context.getNativeObject()));
+                Log.v(TAG, "Native event handle result: " + result);
             } catch (Exception e) {
                 Log.e(TAG, "Async USB handling detected exception.", e);
             }
@@ -45,5 +46,5 @@ public class AsyncUSBThread extends Thread {
         super.interrupt();
     }
 
-    private static native void nativeHandleEvents(@NonNull ByteBuffer context);
+    private static native int nativeHandleEvents(@NonNull ByteBuffer context);
 }
