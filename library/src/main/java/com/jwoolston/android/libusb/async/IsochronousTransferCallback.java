@@ -2,6 +2,7 @@ package com.jwoolston.android.libusb.async;
 
 import android.support.annotation.Nullable;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -9,5 +10,5 @@ import java.nio.ByteBuffer;
  */
 public interface IsochronousTransferCallback {
 
-    void onIsochronousTransferComplete(@Nullable ByteBuffer data, int result);
+    void onIsochronousTransferComplete(@Nullable ByteBuffer data, int result) throws IOException;
 }
