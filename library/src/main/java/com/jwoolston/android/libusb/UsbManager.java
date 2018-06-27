@@ -53,6 +53,8 @@ public class UsbManager {
     @Nullable
     private native ByteBuffer nativeInitialize();
 
+    private native void nativeSetLoggingLevel(@NonNull ByteBuffer nativeObject, int level);
+
     private native void nativeDestroy(@NonNull ByteBuffer context);
 
     public UsbManager(@NonNull Context context) {
@@ -60,6 +62,10 @@ public class UsbManager {
         androidUsbManager = (android.hardware.usb.UsbManager) context.getSystemService(Context.USB_SERVICE);
         libUsbContext = new LibUsbContext(nativeInitialize());
         UsbDeviceConnection.initialize();
+    }
+
+    public void setNativeLogLevel(@NonNull LoggingLevel level) {
+        nativeSetLoggingLevel(libUsbContext.getNativeObject(), level.ordinal());
     }
 
     public void destroy() {
@@ -146,8 +152,17 @@ public class UsbManager {
 
     void startAsyncIfNeeded() {
         if (asyncUsbThread == null) {
+            Log.d(TAG, "Starting async usb thread.");
             asyncUsbThread = new AsyncUSBThread(libUsbContext);
             asyncUsbThread.start();
         }
+    }
+
+    public static enum LoggingLevel {
+        NONE,
+        ERROR,
+        WARNING,
+        INFO,
+        DEBUG
     }
 }
