@@ -21,20 +21,20 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
     private final int                         packetSize;
 
     public IsochronousAsyncTransfer(@NonNull IsochronousTransferCallback callback, @NonNull UsbEndpoint endpoint,
-                                    @NonNull UsbDeviceConnection connection, int packetCount)
+                                    @NonNull UsbDeviceConnection connection, int packetSize, int packetCount)
             throws IOException {
         super(endpoint);
         this.callback = callback;
         this.connection = connection;
         setNativeObject(nativeAllocate(packetCount));
         int size = nativeSetupPackets(connection.getDevice().getNativeObject(), getNativeObject(),
-                                      endpoint.getAddress());
+                                      endpoint.getAddress(), packetSize);
         LibusbError result = size > 0 ? LibusbError.LIBUSB_SUCCESS : LibusbError.fromNative(size);
         if (result != LibusbError.LIBUSB_SUCCESS) {
             throw new IOException("Failed to setup packets: " + result);
         }
         this.packetCount = packetCount;
-        packetSize = size;
+        this.packetSize = packetSize;
     }
 
     public void submit(@NonNull ByteBuffer buffer, int timeout) throws IllegalStateException {
@@ -59,6 +59,6 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
     private native ByteBuffer nativeAllocate(int numberPackets);
 
     private native int nativeSetupPackets(@NonNull ByteBuffer nativeDevice, @NonNull ByteBuffer nativeObject,
-                                          int endpoint);
+                                          int endpoint, int packetSize);
 
 }
