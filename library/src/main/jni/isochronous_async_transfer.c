@@ -18,20 +18,22 @@ Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeAllocate(
 JNIEXPORT jint JNICALL
 Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeSetupPackets(JNIEnv *env, jobject instance,
                                                                                 jobject device, jobject nativeObject,
-                                                                                jint endpoint) {
+                                                                                jint endpoint, jint packetSize) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-    int size = libusb_get_max_iso_packet_size(deviceHandle->dev, endpoint);
+    //int size = libusb_get_max_iso_packet_size(deviceHandle->dev, endpoint);
+    //TODO: Libusb currently does not use the current alternate setting for this
+    //LOGV("ISO Packet Size: %i", packetSize);
 
     // Check for error condition
-    if (size < 0) {
-        return size;
-    }
+    /*if (packetSize < 0) {
+        return packetSize;
+    }*/
 
     struct libusb_transfer *transfer = (struct libusb_transfer *) (*env)->GetDirectBufferAddress(env, nativeObject);
-    libusb_set_iso_packet_lengths(transfer, (unsigned int) size);
+    libusb_set_iso_packet_lengths(transfer, (unsigned int) packetSize);
 
-    return size;
+    //return size;
 }
 
 JNIEXPORT void JNICALL
