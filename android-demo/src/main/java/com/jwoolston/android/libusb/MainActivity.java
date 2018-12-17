@@ -16,10 +16,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import com.jwoolston.android.libusb.UsbManager.LoggingLevel;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.ScsiBlockDevice;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;

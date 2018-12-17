@@ -20,9 +20,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.jwoolston.android.libusb.util.Preconditions;
-
 import java.nio.ByteBuffer;
 
 /**
