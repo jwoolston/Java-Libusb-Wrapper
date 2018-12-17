@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.jwoolston.android.libusb.UsbManager.LoggingLevel;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.ScsiBlockDevice;
 
 import java.io.IOException;
@@ -115,9 +116,11 @@ public class MainActivity extends AppCompatActivity {
         private UsbDeviceConnection communicateWithDevice(@NonNull android.hardware.usb.UsbDevice device) throws DevicePermissionDenied,
             IOException {
             final UsbManager manager = new UsbManager(getApplicationContext());
+            manager.setNativeLogLevel(LoggingLevel.DEBUG);
             final UsbDeviceConnection connection = manager.registerDevice(device);
             connection.resetDevice();
             Log.d(TAG, "Initiating transfer from device: " + connection.getDevice());
+            Log.d(TAG, "Device speed: " + connection.getDevice().getDeviceSpeed());
             UsbMassStorageDevice msc = UsbMassStorageDevice.getMassStorageDevice(MainActivity.this, manager, connection);
             if (msc == null) {
                 throw new RuntimeException("Received a null MSC device.");

@@ -87,6 +87,15 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceVersion(JNIEnv *env, 
 }
 
 JNIEXPORT jint JNICALL
+Java_com_jwoolston_android_libusb_UsbDevice_nativeGetDeviceSpeed(JNIEnv *env, jobject instance, jobject device,
+                                                                 jobject descriptor) {
+
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    return libusb_get_device_speed(deviceHandle);
+}
+
+JNIEXPORT jint JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetConfigurationCount(JNIEnv *env, jobject instance, jobject device) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
@@ -105,7 +114,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetPointerFromNativeObject(JNI
 JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_UsbDevice_nativeGetNativeObjectFromPointer(JNIEnv *env, jobject instance,
                                                                              jlong pointer) {
-    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle*) ((void *) pointer);
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) ((void *) pointer);
 
     if (deviceHandle == NULL) {
         return NULL;
@@ -113,4 +122,5 @@ Java_com_jwoolston_android_libusb_UsbDevice_nativeGetNativeObjectFromPointer(JNI
 
     return ((*env)->NewDirectByteBuffer(env, (void *) deviceHandle, sizeof(struct libusb_device_handle)));
 }
+
 #pragma clang diagnostic pop
