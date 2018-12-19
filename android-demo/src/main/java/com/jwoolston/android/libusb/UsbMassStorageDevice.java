@@ -22,6 +22,13 @@ import android.util.Log;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriverFactory;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
+import com.jwoolston.libusb.LibusbError;
+import com.jwoolston.libusb.UsbConstants;
+import com.jwoolston.libusb.UsbDevice;
+import com.jwoolston.libusb.UsbDeviceConnection;
+import com.jwoolston.libusb.UsbEndpoint;
+import com.jwoolston.libusb.UsbInterface;
+import com.jwoolston.libusb.UsbManager;
 import java.io.IOException;
 
 /**

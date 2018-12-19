@@ -12,13 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package com.jwoolston.android.libusb.msc_test_core.usb;
 
-import com.jwoolston.android.libusb.LibusbError;
-import com.jwoolston.android.libusb.async.BulkTransferCallback;
+import com.jwoolston.libusb.LibusbError;
+import com.jwoolston.libusb.async.BulkTransferCallback;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,9 +28,9 @@ import java.nio.ByteBuffer;
  * moment only bulk IN and OUT transfer are supported. Every class that follows
  * {@link com.github.mjdev.libaums.driver.BlockDeviceDriver} can use this to
  * communicate with the underlying USB stack.
- * 
+ *
  * @author mjahnen
- * 
+ *
  */
 public interface UsbCommunication {
 	int TRANSFER_TIMEOUT = 5000;
@@ -38,7 +38,7 @@ public interface UsbCommunication {
 	/**
 	 * Performs a bulk out transfer beginning at the offset specified in the
 	 * <code>buffer</code> of length <code>buffer#remaining()</code>.
-	 * 
+	 *
 	 * @param src
 	 *            The data to transfer.
 	 * @return Bytes transmitted if successful.
@@ -48,7 +48,7 @@ public interface UsbCommunication {
 	/**
 	 * Performs a bulk in transfer beginning at offset zero in the
 	 * <code>buffer</code> of length <code>buffer#remaining()</code>.
-	 * 
+	 *
 	 * @param dest
 	 *            The buffer where data should be transferred.
 	 * @return Bytes read if successful.

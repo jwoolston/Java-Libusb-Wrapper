@@ -1,0 +1,19 @@
+apply plugin: 'java'
+apply plugin: 'com.cisco.external-build'
+apply plugin: 'org.jetbrains.dokka-android'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'org.jetbrains:annotations:16.0.1'
+
+    testImplementation 'junit:junit:4.12'
+}
+
+dokka {
+    noStdlibLink = false
+    includeNonPublic = false
+    skipEmptyPackages = true
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
+}
