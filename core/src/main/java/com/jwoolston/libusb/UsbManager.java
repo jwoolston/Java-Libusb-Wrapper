@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import timber.log.Timber;
+import timber.log.TimberKt;
 
 /**
  * This class allows you to access the state of USB and communicate with USB devices.

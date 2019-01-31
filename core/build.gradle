@@ -1,11 +1,16 @@
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'com.cisco.external-build'
 apply plugin: 'org.jetbrains.dokka-android'
+
+sourceCompatibility = "7"
+targetCompatibility = "7"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'org.jetbrains:annotations:16.0.1'
+    implementation 'com.jakewharton.timber:timber-common:5.0.0-SNAPSHOT'
+    implementation 'com.jakewharton.timber:timber-jdk:5.0.0-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 }

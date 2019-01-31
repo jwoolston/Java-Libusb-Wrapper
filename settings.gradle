@@ -1,1 +1,1 @@
-include ':android-demo', ':things-demo', ':core', ':msc_test_core', ':android'
+include ':android-demo', ':core', ':msc_test_core', ':android'

@@ -30,8 +30,11 @@ allprojects {
     version "$VERSION_NAME.${buildNumber}" + (isTag ? "" : "-SNAPSHOT")
 
     repositories {
+        google()
         mavenCentral()
         jcenter()
-        google()
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots"
+        }
     }
 }

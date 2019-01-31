@@ -11,23 +11,23 @@ cmake_minimum_required(VERSION 3.4.1)
 # Gradle automatically packages shared libraries with your APK.
 
 include_directories(
-        ../core/libusb/android
-        ../core/libusb/libusb
-        ../core/libusb/libusb/os
+        ../libusb/android
+        ../libusb/libusb
+        ../libusb/libusb/os
         ../core/src/main/jni)
 
 # Defines the source code for the library
 set(libusb_SRCS
-        ../core/libusb/libusb/core.c
-        ../core/libusb/libusb/descriptor.c
-        ../core/libusb/libusb/hotplug.c
-        ../core/libusb/libusb/io.c
-        ../core/libusb/libusb/sync.c
-        ../core/libusb/libusb/strerror.c
-        ../core/libusb/libusb/os/linux_usbfs.c
-        ../core/libusb/libusb/os/poll_posix.c
-        ../core/libusb/libusb/os/threads_posix.c
-        ../core/libusb/libusb/os/linux_netlink.c
+        ../libusb/libusb/core.c
+        ../libusb/libusb/descriptor.c
+        ../libusb/libusb/hotplug.c
+        ../libusb/libusb/io.c
+        ../libusb/libusb/sync.c
+        ../libusb/libusb/strerror.c
+        ../libusb/libusb/os/linux_usbfs.c
+        ../libusb/libusb/os/poll_posix.c
+        ../libusb/libusb/os/threads_posix.c
+        ../libusb/libusb/os/linux_netlink.c
 )
 
 add_library(
