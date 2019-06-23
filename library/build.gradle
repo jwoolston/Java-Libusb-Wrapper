@@ -11,8 +11,7 @@ tasks.withType(Test) {
 }
 
 android {
-    compileSdkVersion Integer.parseInt(COMPILE_VERSION)
-    buildToolsVersion BUILD_TOOLS
+    compileSdkVersion 28
 
     lintOptions {
         disable 'InvalidPackage'
@@ -21,7 +20,7 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion Integer.parseInt(TARGET_VERSION)
+        targetSdkVersion 28
         versionName version
 
         resourcePrefix 'lusb_'
@@ -75,7 +74,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation "com.android.support:appcompat-v7:$support_lib_version"
 
     testImplementation 'junit:junit:4.12'
 
