@@ -18,7 +18,6 @@
 package com.jwoolston.android.libusb.msc_test_core.driver.scsi;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.jwoolston.android.libusb.async.BulkTransferCallback;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
@@ -32,6 +31,7 @@ import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.ScsiReadC
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.ScsiTestUnitReady;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.ScsiWrite10;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
+import com.toxicbakery.logging.Arbor;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -82,7 +82,7 @@ public class AsyncScsiBlockDevice implements BlockDeviceDriver {
 		inBuffer.clear();
 		// TODO support multiple luns!
 		ScsiInquiryResponse inquiryResponse = ScsiInquiryResponse.read(inBuffer);
-		Log.d(TAG, "inquiry response: " + inquiryResponse);
+		Arbor.d("inquiry response: %s", inquiryResponse);
 
 		if (inquiryResponse.getPeripheralQualifier() != 0
 				|| inquiryResponse.getPeripheralDeviceType() != 0) {
@@ -91,7 +91,7 @@ public class AsyncScsiBlockDevice implements BlockDeviceDriver {
 
 		ScsiTestUnitReady testUnit = new ScsiTestUnitReady();
 		if (!transferCommand(testUnit, null)) {
-			Log.w(TAG, "unit not ready!");
+			Arbor.w("unit not ready!");
 		}
 
 		ScsiReadCapacity readCapacity = new ScsiReadCapacity();
@@ -102,8 +102,8 @@ public class AsyncScsiBlockDevice implements BlockDeviceDriver {
 		blockSize = readCapacityResponse.getBlockLength();
 		lastBlockAddress = readCapacityResponse.getLogicalBlockAddress();
 
-		Log.i(TAG, "Block size: " + blockSize);
-		Log.i(TAG, "Last block address: " + lastBlockAddress);
+		Arbor.i("Block size: %s", blockSize);
+		Arbor.i("Last block address: %s", lastBlockAddress);
 	}
 
 	public int getLastBlockAddress() {

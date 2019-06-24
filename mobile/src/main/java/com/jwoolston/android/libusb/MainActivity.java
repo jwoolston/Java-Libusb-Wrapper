@@ -12,13 +12,14 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.jwoolston.android.libusb.UsbManager.LoggingLevel;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.ScsiBlockDevice;
+import com.toxicbakery.logging.Arbor;
+import com.toxicbakery.logging.LogCatSeedling;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Arbor.sow(new LogCatSeedling());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -119,8 +121,8 @@ public class MainActivity extends AppCompatActivity {
             manager.setNativeLogLevel(LoggingLevel.DEBUG);
             final UsbDeviceConnection connection = manager.registerDevice(device);
             connection.resetDevice();
-            Log.d(TAG, "Initiating transfer from device: " + connection.getDevice());
-            Log.d(TAG, "Device speed: " + connection.getDevice().getDeviceSpeed());
+            Arbor.d("Initiating transfer from device: %s", connection.getDevice());
+            Arbor.d("Device speed: %s", connection.getDevice().getDeviceSpeed());
             UsbMassStorageDevice msc = UsbMassStorageDevice.getMassStorageDevice(MainActivity.this, manager, connection);
             if (msc == null) {
                 throw new RuntimeException("Received a null MSC device.");
@@ -171,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
             IOException {
             final UsbManager manager = new UsbManager(getApplicationContext());
             connection.resetDevice();
-            Log.d(TAG, "Initiating transfer from device: " + connection.getDevice());
+            Arbor.d("Initiating transfer from device: %s", connection.getDevice());
             UsbMassStorageDevice msc = UsbMassStorageDevice.getMassStorageDevice(MainActivity.this, manager, connection);
             if (msc == null) {
                 throw new RuntimeException("Received a null MSC device.");
@@ -188,8 +190,6 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < lastBlockAddress; i += BLOCKS_PER_TRANSFER) {
                 buffer.rewind();
                 block.read(i, buffer);
-                //Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 0, 256));
-                //Log.i(TAG, "\n" + Hexdump.dumpHexString(data, 256, 256));
                 publishProgress((long) (i + BLOCKS_PER_TRANSFER), System.currentTimeMillis());
             }
         }
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
         long minute = (ellapsed_ms / (1000 * 60)) % 60;
         long hour = (ellapsed_ms / (1000 * 60 * 60)) % 24;
 
-        return String.format("%02d:%02d:%02d", hour, minute, second);
+        return String.format(Locale.US, "%02d:%02d:%02d", hour, minute, second);
     }
 
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
                             syncTask.execute(device);
                         }
                     } else {
-                        Log.d(TAG, "permission denied for device " + device);
+                        Arbor.d("Permission denied for device %s", device);
                     }
                 }
             }
