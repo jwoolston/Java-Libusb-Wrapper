@@ -24,7 +24,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation project(':library')
+    implementation project(':android')
     implementation project(':msc_test_core')
 
     implementation "com.ToxicBakery.logging:arbor-jvm:$arbor_version"

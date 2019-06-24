@@ -13,23 +13,23 @@ cmake_minimum_required(VERSION 3.4.1)
 add_definitions(-DJNI_WRAPPER)
 
 include_directories(
-    libusb/android
-    libusb/libusb
-    libusb/libusb/os
-    src/main/jni)
+        ../library/libusb/android
+        ../library/libusb/libusb
+        ../library/libusb/libusb/os
+        ../library/src/main/jni)
 
 # Defines the source code for the library
 set(libusb_SRCS
-    libusb/libusb/core.c
-    libusb/libusb/descriptor.c
-    libusb/libusb/hotplug.c
-    libusb/libusb/io.c
-    libusb/libusb/sync.c
-    libusb/libusb/strerror.c
-    libusb/libusb/os/linux_usbfs.c
-    libusb/libusb/os/poll_posix.c
-    libusb/libusb/os/threads_posix.c
-    libusb/libusb/os/linux_netlink.c
+        ../library/libusb/libusb/core.c
+        ../library/libusb/libusb/descriptor.c
+        ../library/libusb/libusb/hotplug.c
+        ../library/libusb/libusb/io.c
+        ../library/libusb/libusb/sync.c
+        ../library/libusb/libusb/strerror.c
+        ../library/libusb/libusb/os/linux_usbfs.c
+        ../library/libusb/libusb/os/poll_posix.c
+        ../library/libusb/libusb/os/threads_posix.c
+        ../library/libusb/libusb/os/linux_netlink.c
 )
 
 add_library(
@@ -40,18 +40,18 @@ add_library(
     SHARED
 
     # Provides a relative path to your source file(s).
-    src/main/jni/async_transfer.c
-    src/main/jni/async_usb_thread.c
-    src/main/jni/common.h
-    src/main/jni/isochronous_async_transfer.c
-    src/main/jni/libusb_device_descriptor.c
-    src/main/jni/libusb_error_enum.c
-    src/main/jni/logging.c
-    src/main/jni/usb_configuration.c
-    src/main/jni/usb_device.c
-    src/main/jni/usb_device_connection.c
-    src/main/jni/usb_interface.c
-    src/main/jni/usb_manager.c
+        ../library/src/main/jni/async_transfer.c
+        ../library/src/main/jni/async_usb_thread.c
+        ../library/src/main/jni/common.h
+        ../library/src/main/jni/isochronous_async_transfer.c
+        ../library/src/main/jni/libusb_device_descriptor.c
+        ../library/src/main/jni/libusb_error_enum.c
+        ../library/src/main/jni/logging.c
+        ../library/src/main/jni/usb_configuration.c
+        ../library/src/main/jni/usb_device.c
+        ../library/src/main/jni/usb_device_connection.c
+        ../library/src/main/jni/usb_interface.c
+        ../library/src/main/jni/usb_manager.c
     ${libusb_SRCS}
 )
 

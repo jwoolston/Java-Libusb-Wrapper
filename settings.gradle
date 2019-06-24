@@ -1,1 +1,1 @@
-include ':mobile', ':library', ':msc_test_core'
+include ':mobile', ':msc_test_core', ':android'
