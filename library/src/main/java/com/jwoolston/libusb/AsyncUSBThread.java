@@ -1,4 +1,4 @@
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
 import com.toxicbakery.logging.Arbor;
 

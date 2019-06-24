@@ -1,6 +1,6 @@
-package com.jwoolston.android.libusb.async;
+package com.jwoolston.libusb.async;
 
-import android.support.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

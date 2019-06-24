@@ -1,4 +1,4 @@
-package com.jwoolston.android.libusb.util;
+package com.jwoolston.libusb.util;
 
 /*
  * Copyright (C) 2011 The Android Open Source Project
@@ -16,9 +16,7 @@ package com.jwoolston.android.libusb.util;
  * limitations under the License.
  */
 
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.text.TextUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
@@ -69,9 +67,9 @@ public class Preconditions {
      * @return the string reference that was validated
      * @throws IllegalArgumentException if {@code string} is empty
      */
-    public static @NonNull
+    public static @NotNull
     <T extends CharSequence> T checkStringNotEmpty(final T string) {
-        if (TextUtils.isEmpty(string)) {
+        if (string == null || string.length() == 0) {
             throw new IllegalArgumentException();
         }
         return string;
@@ -86,9 +84,9 @@ public class Preconditions {
      * @return the string reference that was validated
      * @throws IllegalArgumentException if {@code string} is empty
      */
-    public static @NonNull <T extends CharSequence> T checkStringNotEmpty(final T string,
+    public static @NotNull <T extends CharSequence> T checkStringNotEmpty(final T string,
             final Object errorMessage) {
-        if (TextUtils.isEmpty(string)) {
+        if (string == null || string.length() == 0) {
             throw new IllegalArgumentException(String.valueOf(errorMessage));
         }
         return string;
@@ -101,7 +99,7 @@ public class Preconditions {
      * @return the non-null reference that was validated
      * @throws NullPointerException if {@code reference} is null
      */
-    public static @NonNull <T> T checkNotNull(final T reference) {
+    public static @NotNull <T> T checkNotNull(final T reference) {
         if (reference == null) {
             throw new NullPointerException();
         }
@@ -117,7 +115,7 @@ public class Preconditions {
      * @return the non-null reference that was validated
      * @throws NullPointerException if {@code reference} is null
      */
-    public static @NonNull <T> T checkNotNull(final T reference, final Object errorMessage) {
+    public static @NotNull <T> T checkNotNull(final T reference, final Object errorMessage) {
         if (reference == null) {
             throw new NullPointerException(String.valueOf(errorMessage));
         }
@@ -134,7 +132,7 @@ public class Preconditions {
      * @return the non-null reference that was validated
      * @throws NullPointerException if {@code reference} is null
      */
-    public static @NonNull <T> T checkNotNull(final T reference,
+    public static @NotNull <T> T checkNotNull(final T reference,
             final String messageTemplate,
             final Object... messageArgs) {
         if (reference == null) {
@@ -187,7 +185,7 @@ public class Preconditions {
      * @return the validated numeric value
      * @throws IllegalArgumentException if {@code value} was negative
      */
-    public static @IntRange(from = 0) int checkArgumentNonnegative(final int value,
+    public static int checkArgumentNonnegative(final int value,
                                                                    final String errorMessage) {
         if (value < 0) {
             throw new IllegalArgumentException(errorMessage);
@@ -202,7 +200,7 @@ public class Preconditions {
      * @return the validated numeric value
      * @throws IllegalArgumentException if {@code value} was negative
      */
-    public static @IntRange(from = 0) int checkArgumentNonnegative(final int value) {
+    public static int checkArgumentNonnegative(final int value) {
         if (value < 0) {
             throw new IllegalArgumentException();
         }
@@ -383,7 +381,7 @@ public class Preconditions {
      *
      * @throws NullPointerException if the {@code value} or any of its elements were {@code null}
      */
-    public static @NonNull <C extends Collection<T>, T> C checkCollectionElementsNotNull(
+    public static @NotNull <C extends Collection<T>, T> C checkCollectionElementsNotNull(
             final C value, final String valueName) {
         if (value == null) {
             throw new NullPointerException(valueName + " must not be null");

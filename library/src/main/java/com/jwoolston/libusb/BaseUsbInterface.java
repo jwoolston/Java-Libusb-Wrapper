@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import com.jwoolston.android.libusb.util.Preconditions;
+import com.jwoolston.libusb.util.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,27 +25,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A class representing an interface on a {@link UsbDevice}. USB devices can have one or more interfaces, each one
+ * A class representing an interface on a {@link BaseUsbDevice}. USB devices can have one or more interfaces, each one
  * providing a different piece of functionality, separate from the other interfaces. An interface will have one or
- * more {@link UsbEndpoint}s, which are the channels by which the host transfers data with the device.
+ * more {@link BaseUsbEndpoint}s, which are the channels by which the host transfers data with the device.
  */
-public class UsbInterface implements Parcelable {
+public class BaseUsbInterface {
 
-    private final int    id;
-    private final int    alternateSetting;
+    final int    id;
+    final int    alternateSetting;
     @Nullable
-    private final String name;
-    private final int    interfaceClass;
-    private final int    subclass;
-    private final int    protocol;
+    final String name;
+    final int    interfaceClass;
+    final int    subclass;
+    final int    protocol;
 
     /** All endpoints of this interface, only null during creation */
-    private Parcelable[] endpoints;
+    BaseUsbEndpoint[] endpoints;
 
     /**
-     * UsbInterface should only be instantiated by UsbManager implementation
+     * BaseUsbInterface should only be instantiated by BaseUsbManager implementation
      */
-    UsbInterface(int id, int alternateSetting, @Nullable String name, int interfaceClass, int subClass, int protocol) {
+    BaseUsbInterface(int id, int alternateSetting, @Nullable String name, int interfaceClass, int subClass, int protocol) {
         this.id = id;
         this.alternateSetting = alternateSetting;
         this.name = name;
@@ -68,7 +66,7 @@ public class UsbInterface implements Parcelable {
 
     /**
      * Returns the interface's bAlternateSetting field. This is an integer that along with the ID uniquely identifies
-     * the interface on the device. {@link UsbDeviceConnection#setInterface} can be used to switch between
+     * the interface on the device. {@link BaseUsbDeviceConnection#setInterface} can be used to switch between
      * two interfaces with the same ID but different alternate setting.
      *
      * @return the interface's alternate setting
@@ -115,7 +113,7 @@ public class UsbInterface implements Parcelable {
     }
 
     /**
-     * Returns the number of {@link android.hardware.usb.UsbEndpoint}s this interface contains.
+     * Returns the number of endpoints this interface contains.
      *
      * @return the number of endpoints
      */
@@ -124,24 +122,24 @@ public class UsbInterface implements Parcelable {
     }
 
     /**
-     * Returns the {@link android.hardware.usb.UsbEndpoint} at the given index.
+     * Returns the endpoint at the given index.
      *
      * @return the endpoint
      */
-    public UsbEndpoint getEndpoint(int index) {
-        return (UsbEndpoint) endpoints[index];
+    public BaseUsbEndpoint getEndpoint(int index) {
+        return endpoints[index];
     }
 
     /**
-     * Only used by UsbManager implementation
+     * Only used by BaseUsbManager implementation
      */
-    void setEndpoints(Parcelable[] endpoints) {
+    void setEndpoints(BaseUsbEndpoint[] endpoints) {
         this.endpoints = Preconditions.checkArrayElementsNotNull(endpoints, "endpoints");
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("UsbInterface[id=" + id +
+        StringBuilder builder = new StringBuilder("BaseUsbInterface[id=" + id +
                                                   ",alternateSetting=" + alternateSetting +
                                                   ",name=" + name + ",interfaceClass=" + interfaceClass +
                                                   ",subclass=" + subclass + ",protocol=" + protocol +
@@ -156,40 +154,6 @@ public class UsbInterface implements Parcelable {
         return builder.toString();
     }
 
-    public static final Parcelable.Creator<UsbInterface> CREATOR =
-        new Parcelable.Creator<UsbInterface>() {
-            public UsbInterface createFromParcel(Parcel in) {
-                int id = in.readInt();
-                int alternateSetting = in.readInt();
-                String name = in.readString();
-                int Class = in.readInt();
-                int subClass = in.readInt();
-                int protocol = in.readInt();
-                Parcelable[] endpoints = in.readParcelableArray(UsbEndpoint.class.getClassLoader());
-                UsbInterface intf = new UsbInterface(id, alternateSetting, name, Class, subClass, protocol);
-                intf.setEndpoints(endpoints);
-                return intf;
-            }
-
-            public UsbInterface[] newArray(int size) {
-                return new UsbInterface[size];
-            }
-        };
-
-    public int describeContents() {
-        return 0;
-    }
-
-    public void writeToParcel(Parcel parcel, int flags) {
-        parcel.writeInt(id);
-        parcel.writeInt(alternateSetting);
-        parcel.writeString(name);
-        parcel.writeInt(interfaceClass);
-        parcel.writeInt(subclass);
-        parcel.writeInt(protocol);
-        parcel.writeParcelableArray(endpoints, 0);
-    }
-
     private static final int INDEX_INTERFACE_ID = 2;
     private static final int INDEX_ALTERNATE_SETTING = 3;
     private static final int INDEX_NUM_ENDPOINTS = 4;
@@ -199,9 +163,9 @@ public class UsbInterface implements Parcelable {
     private static final int INDEX_INTERFACE_STRING_INDEX = 8;
 
     @NotNull
-    static List<UsbInterface> fromNativeObject(@NotNull UsbDevice device, @NotNull ByteBuffer nativeInterface) {
-        final List<UsbInterface> interfaces = new ArrayList<>();
-        UsbInterface usbInterface = null;
+    static List<BaseUsbInterface> fromNativeObject(@NotNull BaseUsbDevice device, @NotNull ByteBuffer nativeInterface) {
+        final List<BaseUsbInterface> interfaces = new ArrayList<>();
+        BaseUsbInterface usbInterface = null;
         do {
             usbInterface = fromNativeDescriptor(device, nativeInterface, interfaces.size());
             if (usbInterface != null) {
@@ -212,13 +176,14 @@ public class UsbInterface implements Parcelable {
     }
 
     @Nullable
-    private static UsbInterface fromNativeDescriptor(@NotNull UsbDevice device, @NotNull ByteBuffer nativeObject,
-                                                     int index) {
+    private static BaseUsbInterface fromNativeDescriptor(@NotNull BaseUsbDevice device, @NotNull ByteBuffer nativeObject,
+                                                         int index) {
         final ByteBuffer nativeDescriptor = nativeGetInterfaceDescriptor(nativeObject, index);
 
         if (nativeDescriptor == null) {
             return null;
         }
+        nativeDescriptor.isDirect();
 
         final int id = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_ID);
         final int alternateSetting = 0xFF & nativeDescriptor.get(INDEX_ALTERNATE_SETTING);
@@ -227,14 +192,14 @@ public class UsbInterface implements Parcelable {
         final int subclass = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_SUBCLASS);
         final int protocol = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_PROTOCOL);
         final int stringIndex = 0xFF & nativeDescriptor.get(INDEX_INTERFACE_STRING_INDEX);
-        final String name = UsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
-        final UsbInterface usbInterface = new UsbInterface(id, alternateSetting, name, interfaceClass, subclass,
-                                                          protocol);
-        final UsbEndpoint[] endpoints = new UsbEndpoint[numEndpoints];
+        final String name = BaseUsbDevice.nativeGetStringDescriptor(device.getNativeObject(), stringIndex);
+        final BaseUsbInterface usbInterface = device.createInterface(id, alternateSetting, name,
+                interfaceClass, subclass, protocol);
+        final BaseUsbEndpoint[] endpoints = new BaseUsbEndpoint[numEndpoints];
         for (int i = 0; i < numEndpoints; ++i) {
             final ByteBuffer nativeEndpoint = nativeGetEndpoint(nativeDescriptor, i);
             if (nativeEndpoint != null) {
-                endpoints[i] = UsbEndpoint.fromNativeObject(nativeEndpoint);
+                endpoints[i] = BaseUsbEndpoint.fromNativeObject(device, nativeEndpoint);
             } else {
                 throw new IllegalStateException("Received a null endpoint when one was expected. Expected index: " +
                                                 i + " Expected total: " + numEndpoints);

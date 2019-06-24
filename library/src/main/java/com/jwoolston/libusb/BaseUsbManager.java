@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jwoolston.android.libusb;
-
-import android.content.Context;
+package com.jwoolston.libusb;
 
 import com.toxicbakery.logging.Arbor;
 
@@ -30,25 +28,21 @@ import java.util.Map.Entry;
  * This class allows you to access the state of USB and communicate with USB devices.
  * Currently only host mode is supported in the public API.
  * <p>
- * This class API is based on the Android {@link android.hardware.usb.UsbManager} class.
+ * This class API is based on the Android {@code android.hardware.usb.BaseUsbManager} class.
  *
  * @author Jared Woolston (Jared.Woolston@gmail.com)
  */
-public class UsbManager {
+public class BaseUsbManager {
 
     static {
         System.loadLibrary("wrapper_libusb");
     }
 
-    private static final String TAG = "LibUSB UsbManager";
+    final Object cacheLock = new Object();
 
-    private final Object cacheLock = new Object();
-
-    private final Context context;
-    private final android.hardware.usb.UsbManager androidUsbManager;
-    private final HashMap<String, UsbDevice> localDeviceCache = new HashMap<>();
-    private final HashMap<String, UsbDeviceConnection> localConnectionCache = new HashMap<>();
-    private final LibUsbContext libUsbContext;
+    final HashMap<String, BaseUsbDevice> localDeviceCache = new HashMap<>();
+    final HashMap<String, BaseUsbDeviceConnection> localConnectionCache = new HashMap<>();
+    final LibUsbContext libUsbContext;
 
     private volatile AsyncUSBThread asyncUsbThread;
 
@@ -59,11 +53,9 @@ public class UsbManager {
 
     private native void nativeDestroy(@NotNull ByteBuffer context);
 
-    public UsbManager(@NotNull Context context) {
-        this.context = context.getApplicationContext();
-        androidUsbManager = (android.hardware.usb.UsbManager) context.getSystemService(Context.USB_SERVICE);
+    public BaseUsbManager() {
         libUsbContext = new LibUsbContext(nativeInitialize());
-        UsbDeviceConnection.initialize();
+        BaseUsbDeviceConnection.initialize();
     }
 
     public void setNativeLogLevel(@NotNull LoggingLevel level) {
@@ -76,33 +68,7 @@ public class UsbManager {
         }
     }
 
-    @NotNull
-    public UsbDeviceConnection registerDevice(@NotNull android.hardware.usb.UsbDevice device) throws
-        DevicePermissionDenied {
-        synchronized (cacheLock) {
-            final String key = device.getDeviceName();
-            if (localConnectionCache.containsKey(key)) {
-                // We have already dealt with this device, do nothing
-                Arbor.d("returning cached device.");
-                return localConnectionCache.get(key);
-            } else {
-                android.hardware.usb.UsbDeviceConnection connection = androidUsbManager.openDevice(device);
-                if (connection == null) {
-                    throw new DevicePermissionDenied(device);
-                }
-                final UsbDevice usbDevice = UsbDevice.fromAndroidDevice(libUsbContext, device, connection);
-                final UsbDeviceConnection usbConnection = UsbDeviceConnection.fromAndroidConnection(context, this,
-                    usbDevice);
-                localDeviceCache.put(key, usbDevice);
-                localConnectionCache.put(key, usbConnection);
-
-                usbDevice.populate();
-                return usbConnection;
-            }
-        }
-    }
-
-    void unregisterDevice(@NotNull UsbDevice device) {
+    void unregisterDevice(@NotNull BaseUsbDevice device) {
         synchronized (cacheLock) {
             final String key = device.getDeviceName();
             localConnectionCache.remove(key);
@@ -112,16 +78,16 @@ public class UsbManager {
     }
 
     /**
-     * Returns a {@link HashMap} containing all USB devices currently attached. USB device name is the key for the
-     * returned {@link HashMap}. The result will be empty if no devices are attached, or if USB host mode is inactive
-     * or unsupported.
+     * Returns a {@link HashMap} containing all USB devices currently attached. USB device name is
+     * the key for the returned {@link HashMap}. The result will be empty if no devices are
+     * attached, or if USB host mode is inactive or unsupported.
      *
      * @return {@link HashMap} containing all connected USB devices.
      */
-    public HashMap<String, UsbDevice> getDeviceList() {
+    public HashMap<String, BaseUsbDevice> getDeviceList() {
         synchronized (cacheLock) {
-            final HashMap<String, UsbDevice> map = new HashMap<>();
-            for (Entry<String, UsbDevice> entry : localDeviceCache.entrySet()) {
+            final HashMap<String, BaseUsbDevice> map = new HashMap<>();
+            for (Entry<String, BaseUsbDevice> entry : localDeviceCache.entrySet()) {
                 map.put(entry.getKey(), entry.getValue());
             }
             return map;

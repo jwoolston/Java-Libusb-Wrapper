@@ -165,11 +165,11 @@ static void LIBUSB_CALL libusb_transfer_callback(struct libusb_transfer *transfe
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInitialize(JNIEnv *env, jclass type) {
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeInitialize(JNIEnv *env, jclass type) {
     // Find the control transfer callback method
-    jclass clazz = (*env)->FindClass(env, "com/jwoolston/android/libusb/async/ControlTransferCallback");
+    jclass clazz = (*env)->FindClass(env, "com/jwoolston/libusb/async/ControlTransferCallback");
     if (clazz == NULL) {
-        LOGE("Failed to find class com.jwoolston.android.libusb.async.ControlTransferCallback");
+        LOGE("Failed to find class com.jwoolston.libusb.async.ControlTransferCallback");
         return JNI_FALSE;
     }
     controlCallback = (*env)->GetMethodID(env, clazz, "onControlTransferComplete", "(Ljava/nio/ByteBuffer;I)V");
@@ -179,9 +179,9 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInitialize(JNIEnv *e
     }
 
     // Find the bulk transfer callback method
-    clazz = (*env)->FindClass(env, "com/jwoolston/android/libusb/async/BulkTransferCallback");
+    clazz = (*env)->FindClass(env, "com/jwoolston/libusb/async/BulkTransferCallback");
     if (clazz == NULL) {
-        LOGE("Failed to find class com.jwoolston.android.libusb.async.BulkTransferCallback");
+        LOGE("Failed to find class com.jwoolston.libusb.async.BulkTransferCallback");
         return JNI_FALSE;
     }
     bulkCallback = (*env)->GetMethodID(env, clazz, "onBulkTransferComplete", "(Ljava/nio/ByteBuffer;I)V");
@@ -191,9 +191,9 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInitialize(JNIEnv *e
     }
 
     // Find the interrupt transfer callback method
-    clazz = (*env)->FindClass(env, "com/jwoolston/android/libusb/async/InterruptTransferCallback");
+    clazz = (*env)->FindClass(env, "com/jwoolston/libusb/async/InterruptTransferCallback");
     if (clazz == NULL) {
-        LOGE("Failed to find class com.jwoolston.android.libusb.async.InterruptTransferCallback");
+        LOGE("Failed to find class com.jwoolston.libusb.async.InterruptTransferCallback");
         return JNI_FALSE;
     }
     interruptCallback = (*env)->GetMethodID(env, clazz, "onInterruptTransferComplete", "(Ljava/nio/ByteBuffer;I)V");
@@ -203,9 +203,9 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInitialize(JNIEnv *e
     }
 
     // Find the interrupt transfer callback method
-    clazz = (*env)->FindClass(env, "com/jwoolston/android/libusb/async/IsochronousTransferCallback");
+    clazz = (*env)->FindClass(env, "com/jwoolston/libusb/async/IsochronousTransferCallback");
     if (clazz == NULL) {
-        LOGE("Failed to find class com.jwoolston.android.libusb.async.IsochronousTransferCallback");
+        LOGE("Failed to find class com.jwoolston.libusb.async.IsochronousTransferCallback");
         return JNI_FALSE;
     }
     isochronousCallback = (*env)->GetMethodID(env, clazz, "onIsochronousTransferComplete", "(Ljava/nio/ByteBuffer;I)V");
@@ -229,7 +229,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInitialize(JNIEnv *e
 }
 
 JNIEXPORT void JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClose(JNIEnv *env, jobject instance, jobject device) {
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeClose(JNIEnv *env, jobject instance, jobject device) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
     libusb_close(deviceHandle);
@@ -239,7 +239,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClose(JNIEnv *env, j
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeGetRawDescriptor(JNIEnv *env, jobject instance, jint fd) {
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeGetRawDescriptor(JNIEnv *env, jobject instance, jint fd) {
     char buffer[16384];
     if (fd < 0) return NULL;
     lseek(fd, 0, SEEK_SET);
@@ -257,7 +257,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeGetRawDescriptor(JNI
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClearStall(JNIEnv *env, jobject instance, jobject device,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeClearStall(JNIEnv *env, jobject instance, jobject device,
                                                                        jint address) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
@@ -265,7 +265,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClearStall(JNIEnv *e
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClaimInterface(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeClaimInterface(JNIEnv *env, jobject instance,
                                                                            jobject device, jint interfaceID,
                                                                            jboolean force) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
@@ -279,7 +279,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeClaimInterface(JNIEn
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeReleaseInterface(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeReleaseInterface(JNIEnv *env, jobject instance,
                                                                              jobject device, jint interfaceID) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
@@ -287,7 +287,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeReleaseInterface(JNI
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeSetInterface(JNIEnv *env, jobject instance, jobject device,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeSetInterface(JNIEnv *env, jobject instance, jobject device,
                                                                          jint interfaceID, jint alternateSetting) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
@@ -295,7 +295,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeSetInterface(JNIEnv 
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeSetConfiguration(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeSetConfiguration(JNIEnv *env, jobject instance,
                                                                              jobject device, jint configurationID) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
@@ -303,7 +303,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeSetConfiguration(JNI
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequest(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeControlRequest(JNIEnv *env, jobject instance,
                                                                            jobject device, jint requestType,
                                                                            jint request, jint value, jint index,
                                                                            jbyteArray buffer_, jint offset, jint length,
@@ -312,21 +312,22 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequest(JNIEn
                                                                                                                device);
     jbyte *buffer = NULL;
     if (buffer_) {
-        buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
+        // We have to use this over GetPrimitiveArrayCritical due to the need to call other JNI functions
+        buffer = (*env)->GetByteArrayElements(env, buffer_, NULL);
     }
     jint result = libusb_control_transfer(deviceHandle, (uint8_t) (0xFF & requestType), (uint8_t) (0xFF & request),
                                           (uint16_t) (0xFFFF & value), (uint16_t) (0xFFFF & index),
                                           (unsigned char *) (buffer + offset), (uint16_t) (0xFFFF & length),
                                           (unsigned int) timeout);
     if (buffer) {
-        (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
+        (*env)->ReleaseByteArrayElements(env, buffer_, buffer, 0);
     }
 
     return result;
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequestAsync(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeControlRequestAsync(JNIEnv *env, jobject instance,
                                                                                 jobject device, jobject callback,
                                                                                 jint requestType, jint request,
                                                                                 jint value, jint index,
@@ -374,14 +375,15 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeControlRequestAsync(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *env, jobject instance, jobject device,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeBulkRequest(JNIEnv *env, jobject instance, jobject device,
                                                                         jint endpoint, jbyteArray buffer_, jint offset,
                                                                         jint length, jint timeout) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
     jbyte *buffer = NULL;
     if (buffer_) {
-        buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
+        // We have to use this over GetPrimitiveArrayCritical due to the need to call other JNI functions
+        buffer = (*env)->GetByteArrayElements(env, buffer_, NULL);
     }
 
     int transferred;
@@ -389,13 +391,13 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequest(JNIEnv *
                                        buffer + offset, length, &transferred, (unsigned int) timeout);
 
     if (buffer) {
-        (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
+        (*env)->ReleaseByteArrayElements(env, buffer_, buffer, 0);
     }
     return ((result == 0) ? transferred : result);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequestAsync(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeBulkRequestAsync(JNIEnv *env, jobject instance,
                                                                              jobject device, jobject callback,
                                                                              jint address, jbyteArray buffer_,
                                                                              jint offset, jint length, jint timeout) {
@@ -437,7 +439,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeBulkRequestAsync(JNI
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequest(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeInterruptRequest(JNIEnv *env, jobject instance,
                                                                              jobject device, jint endpoint,
                                                                              jbyteArray buffer_, jint offset,
                                                                              jint length, jint timeout) {
@@ -445,18 +447,19 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequest(JNI
                                                                                                                device);
     jbyte *buffer = NULL;
     if (buffer_) {
-        buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
+        // We have to use this over GetPrimitiveArrayCritical due to the need to call other JNI functions
+        buffer = (*env)->GetByteArrayElements(env, buffer_, NULL);
     }
     jint transfered;
     jint result = libusb_interrupt_transfer(deviceHandle, endpoint, buffer + offset, length, &transfered, timeout);
     if (buffer) {
-        (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
+        (*env)->ReleaseByteArrayElements(env, buffer_, buffer, 0);
     }
     return ((result == 0) ? transfered : result);
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequestAsync(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeInterruptRequestAsync(JNIEnv *env, jobject instance,
                                                                                   jobject callback,
                                                                                   jobject device, jint address,
                                                                                   jbyteArray buffer_, jint offset,
@@ -477,11 +480,12 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequestAsyn
     // Fill the data buffer if outgoing transfer
     if ((address & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT) {
         if (buffer_) {
-            buffer = (jbyte *) (*env)->GetPrimitiveArrayCritical(env, buffer_, NULL);
+            // We have to use this over GetPrimitiveArrayCritical due to the need to call other JNI functions
+            buffer = (*env)->GetByteArrayElements(env, buffer_, NULL);
         }
         memcpy(buffer + offset, userData, length);
         if (buffer) {
-            (*env)->ReleasePrimitiveArrayCritical(env, buffer_, buffer, 0);
+            (*env)->ReleaseByteArrayElements(env, buffer_, buffer, 0);
         }
     }
 
@@ -500,7 +504,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeInterruptRequestAsyn
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeIsochronousRequestAsync(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeIsochronousRequestAsync(JNIEnv *env, jobject instance,
                                                                                     jobject callback, jobject device,
                                                                                     jobject transfer, jint address,
                                                                                     jobject buffer, jint length,
@@ -522,7 +526,7 @@ Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeIsochronousRequestAs
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_UsbDeviceConnection_nativeResetDevice(JNIEnv *env, jobject instance, jobject device) {
+Java_com_jwoolston_libusb_BaseUsbDeviceConnection_nativeResetDevice(JNIEnv *env, jobject instance, jobject device) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
     return libusb_reset_device(deviceHandle);

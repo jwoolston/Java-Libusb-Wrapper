@@ -1,4 +1,4 @@
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class DevicePermissionDenied extends Exception {
 
-    public DevicePermissionDenied(@NotNull UsbDevice device) {
+    public DevicePermissionDenied(@NotNull android.hardware.usb.UsbDevice device) {
         super("Permission was denied for device: " + device.getDeviceName());
     }
 }

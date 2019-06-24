@@ -9,7 +9,7 @@
 #define  LOG_TAG    "UsbConfiguration-Native"
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetConfiguration(JNIEnv *env, jclass type, jobject device,
+Java_com_jwoolston_libusb_BaseUsbConfiguration_nativeGetConfiguration(JNIEnv *env, jclass type, jobject device,
                                                                           jint configuration) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
@@ -24,7 +24,7 @@ Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetConfiguration(JNIEnv
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetInterface(JNIEnv *env, jclass type, jobject nativeObject,
+Java_com_jwoolston_libusb_BaseUsbConfiguration_nativeGetInterface(JNIEnv *env, jclass type, jobject nativeObject,
                                                                       jint interfaceIndex) {
     struct libusb_config_descriptor *config = (struct libusb_config_descriptor *)
             (*env)->GetDirectBufferAddress(env, nativeObject);
@@ -34,7 +34,7 @@ Java_com_jwoolston_android_libusb_UsbConfiguration_nativeGetInterface(JNIEnv *en
 }
 
 JNIEXPORT void JNICALL
-Java_com_jwoolston_android_libusb_UsbConfiguration_nativeDestroy(JNIEnv *env, jclass type, jobject nativeObject) {
+Java_com_jwoolston_libusb_BaseUsbConfiguration_nativeDestroy(JNIEnv *env, jclass type, jobject nativeObject) {
     struct libusb_config_descriptor *config = (struct libusb_config_descriptor *)
             (*env)->GetDirectBufferAddress(env, nativeObject);
     libusb_free_config_descriptor(config);

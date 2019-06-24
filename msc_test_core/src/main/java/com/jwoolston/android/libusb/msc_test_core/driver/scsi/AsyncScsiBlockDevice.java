@@ -19,7 +19,7 @@ package com.jwoolston.android.libusb.msc_test_core.driver.scsi;
 
 import android.support.annotation.Nullable;
 
-import com.jwoolston.android.libusb.async.BulkTransferCallback;
+import com.jwoolston.libusb.async.BulkTransferCallback;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.CommandBlockWrapper;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.commands.CommandStatusWrapper;

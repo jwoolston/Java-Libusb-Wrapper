@@ -7,7 +7,7 @@
 #define  LOG_TAG    "IsochronousAsyncTransfer-Native"
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeAllocate(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_async_IsochronousAsyncTransfer_nativeAllocate(JNIEnv *env, jobject instance,
                                                                             jint numberPackets) {
     struct libusb_transfer *transfer = libusb_alloc_transfer(numberPackets);
     transfer->num_iso_packets = numberPackets;
@@ -16,7 +16,7 @@ Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeAllocate(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeSetupPackets(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_async_IsochronousAsyncTransfer_nativeSetupPackets(JNIEnv *env, jobject instance,
                                                                                 jobject device, jobject nativeObject,
                                                                                 jint endpoint, jint packetSize) {
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
@@ -37,7 +37,7 @@ Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeSetupPack
 }
 
 JNIEXPORT void JNICALL
-Java_com_jwoolston_android_libusb_async_IsochronousAsyncTransfer_nativeDestroy(JNIEnv *env, jobject instance,
+Java_com_jwoolston_libusb_async_IsochronousAsyncTransfer_nativeDestroy(JNIEnv *env, jobject instance,
                                                                            jobject nativeObject) {
 
 }

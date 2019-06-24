@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
 /**
  * Contains constants for the USB protocol.
@@ -21,38 +21,38 @@ package com.jwoolston.android.libusb;
  */
 public final class UsbConstants {
     /**
-     * Bitmask used for extracting the {@link UsbEndpoint} direction from its address field.
+     * Bitmask used for extracting the {@link BaseUsbEndpoint} direction from its address field.
      *
-     * @see UsbEndpoint#getAddress
-     * @see UsbEndpoint#getDirection
+     * @see BaseUsbEndpoint#getAddress
+     * @see BaseUsbEndpoint#getDirection
      * @see #USB_DIR_OUT
      * @see #USB_DIR_IN
      */
     public static final int USB_ENDPOINT_DIR_MASK = 0x80;
     /**
-     * Used to signify direction of data for a {@link UsbEndpoint} is OUT (host to device)
+     * Used to signify direction of data for a {@link BaseUsbEndpoint} is OUT (host to device)
      *
-     * @see UsbEndpoint#getDirection
+     * @see BaseUsbEndpoint#getDirection
      */
     public static final int USB_DIR_OUT = 0;
     /**
-     * Used to signify direction of data for a {@link UsbEndpoint} is IN (device to host)
+     * Used to signify direction of data for a {@link BaseUsbEndpoint} is IN (device to host)
      *
-     * @see UsbEndpoint#getDirection
+     * @see BaseUsbEndpoint#getDirection
      */
     public static final int USB_DIR_IN = 0x80;
     /**
-     * Bitmask used for extracting the {@link UsbEndpoint} number its address field.
+     * Bitmask used for extracting the {@link BaseUsbEndpoint} number its address field.
      *
-     * @see UsbEndpoint#getAddress
-     * @see UsbEndpoint#getEndpointNumber
+     * @see BaseUsbEndpoint#getAddress
+     * @see BaseUsbEndpoint#getEndpointNumber
      */
     public static final int USB_ENDPOINT_NUMBER_MASK = 0x0f;
     /**
-     * Bitmask used for extracting the {@link UsbEndpoint} type from its address field.
+     * Bitmask used for extracting the {@link BaseUsbEndpoint} type from its address field.
      *
-     * @see UsbEndpoint#getAddress
-     * @see UsbEndpoint#getType
+     * @see BaseUsbEndpoint#getAddress
+     * @see BaseUsbEndpoint#getType
      * @see #USB_ENDPOINT_XFER_CONTROL
      * @see #USB_ENDPOINT_XFER_ISOC
      * @see #USB_ENDPOINT_XFER_BULK
@@ -62,25 +62,25 @@ public final class UsbConstants {
     /**
      * Control endpoint type (endpoint zero)
      *
-     * @see UsbEndpoint#getType
+     * @see BaseUsbEndpoint#getType
      */
     public static final int USB_ENDPOINT_XFER_CONTROL = 0;
     /**
      * Isochronous endpoint type (currently not supported)
      *
-     * @see UsbEndpoint#getType
+     * @see BaseUsbEndpoint#getType
      */
     public static final int USB_ENDPOINT_XFER_ISOC = 1;
     /**
      * Bulk endpoint type
      *
-     * @see UsbEndpoint#getType
+     * @see BaseUsbEndpoint#getType
      */
     public static final int USB_ENDPOINT_XFER_BULK = 2;
     /**
      * Interrupt endpoint type
      *
-     * @see UsbEndpoint#getType
+     * @see BaseUsbEndpoint#getType
      */
     public static final int USB_ENDPOINT_XFER_INT = 3;
     /**

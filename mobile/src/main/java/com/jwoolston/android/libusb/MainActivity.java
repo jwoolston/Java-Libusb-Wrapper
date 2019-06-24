@@ -16,8 +16,11 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.jwoolston.android.libusb.UsbManager.LoggingLevel;
 import com.jwoolston.android.libusb.msc_test_core.driver.scsi.ScsiBlockDevice;
+import com.jwoolston.libusb.BaseUsbManager;
+import com.jwoolston.libusb.DevicePermissionDenied;
+import com.jwoolston.libusb.UsbDeviceConnection;
+import com.jwoolston.libusb.UsbManager;
 import com.toxicbakery.logging.Arbor;
 import com.toxicbakery.logging.LogCatSeedling;
 
@@ -118,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         private UsbDeviceConnection communicateWithDevice(@NonNull android.hardware.usb.UsbDevice device) throws DevicePermissionDenied,
             IOException {
             final UsbManager manager = new UsbManager(getApplicationContext());
-            manager.setNativeLogLevel(LoggingLevel.DEBUG);
+            manager.setNativeLogLevel(BaseUsbManager.LoggingLevel.DEBUG);
             final UsbDeviceConnection connection = manager.registerDevice(device);
             connection.resetDevice();
             Arbor.d("Initiating transfer from device: %s", connection.getDevice());

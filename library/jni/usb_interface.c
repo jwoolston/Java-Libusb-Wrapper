@@ -9,7 +9,7 @@
 #define  LOG_TAG    "UsbConfInterface-Native"
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbInterface_nativeGetInterfaceDescriptor(JNIEnv *env, jclass type,
+Java_com_jwoolston_libusb_BaseUsbInterface_nativeGetInterfaceDescriptor(JNIEnv *env, jclass type,
                                                                             jobject nativeObject, jint index) {
     struct libusb_interface *interface = (struct libusb_interface *) (*env)->GetDirectBufferAddress(env, nativeObject);
     if (index >= interface->num_altsetting) {
@@ -21,7 +21,7 @@ Java_com_jwoolston_android_libusb_UsbInterface_nativeGetInterfaceDescriptor(JNIE
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_jwoolston_android_libusb_UsbInterface_nativeGetEndpoint(JNIEnv *env, jclass type, jobject nativeDescriptor,
+Java_com_jwoolston_libusb_BaseUsbInterface_nativeGetEndpoint(JNIEnv *env, jclass type, jobject nativeDescriptor,
                                                                  jint index) {
     struct libusb_interface_descriptor *descriptor = (struct libusb_interface_descriptor *)
             (*env)->GetDirectBufferAddress(env, nativeDescriptor);

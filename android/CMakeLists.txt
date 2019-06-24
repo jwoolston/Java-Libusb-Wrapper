@@ -40,18 +40,18 @@ add_library(
     SHARED
 
     # Provides a relative path to your source file(s).
-        ../library/src/main/jni/async_transfer.c
-        ../library/src/main/jni/async_usb_thread.c
-        ../library/src/main/jni/common.h
-        ../library/src/main/jni/isochronous_async_transfer.c
-        ../library/src/main/jni/libusb_device_descriptor.c
-        ../library/src/main/jni/libusb_error_enum.c
-        ../library/src/main/jni/logging.c
-        ../library/src/main/jni/usb_configuration.c
-        ../library/src/main/jni/usb_device.c
-        ../library/src/main/jni/usb_device_connection.c
-        ../library/src/main/jni/usb_interface.c
-        ../library/src/main/jni/usb_manager.c
+        ../library/jni/async_transfer.c
+        ../library/jni/async_usb_thread.c
+        ../library/jni/common.h
+        ../library/jni/isochronous_async_transfer.c
+        ../library/jni/libusb_device_descriptor.c
+        ../library/jni/libusb_error_enum.c
+        ../library/jni/logging.c
+        ../library/jni/usb_configuration.c
+        ../library/jni/usb_device.c
+        ../library/jni/usb_device_connection.c
+        ../library/jni/usb_interface.c
+        ../library/jni/usb_manager.c
     ${libusb_SRCS}
 )
 

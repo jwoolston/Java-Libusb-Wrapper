@@ -5,6 +5,6 @@
 #include <common.h>
 
 JNIEXPORT jstring JNICALL
-Java_com_jwoolston_android_libusb_LibusbError_getDescriptionString(JNIEnv *env, jclass type, jint code) {
+Java_com_jwoolston_libusb_LibusbError_getDescriptionString(JNIEnv *env, jclass type, jint code) {
     return (*env)->NewStringUTF(env, libusb_strerror((enum libusb_error) code));
 }

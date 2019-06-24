@@ -13,32 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jwoolston.android.libusb;
-
-import android.os.Parcel;
-import android.os.Parcelable;
+package com.jwoolston.libusb;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
 /**
- * A class representing an endpoint on a {@link UsbInterface}. Endpoints are the channels for sending and receiving
+ * A class representing an endpoint on a {@link BaseUsbInterface}. Endpoints are the channels for sending and receiving
  * data over USB. Typically bulk endpoints are used for sending non-trivial amounts of data. Interrupt endpoints are
  * used for sending small amounts of data, typically events, separately from the main data streams. The endpoint zero
  * is a special endpoint for control messages sent from the host to device.
  */
-public class UsbEndpoint implements Parcelable {
+public class BaseUsbEndpoint {
 
-    private final int address;
-    private final int attributes;
-    private final int maxPacketSize;
-    private final int interval;
+    final int address;
+    final int attributes;
+    final int maxPacketSize;
+    final int interval;
 
     /**
-     * UsbEndpoint should only be instantiated by UsbService implementation
+     * BaseUsbEndpoint should only be instantiated by UsbService implementation
      */
-    UsbEndpoint(int address, int attributes, int maxPacketSize, int interval) {
+    BaseUsbEndpoint(int address, int attributes, int maxPacketSize, int interval) {
         this.address = address;
         this.attributes = attributes;
         this.maxPacketSize = maxPacketSize;
@@ -121,34 +118,8 @@ public class UsbEndpoint implements Parcelable {
 
     @Override
     public String toString() {
-        return "UsbEndpoint[address=" + address + ",attributes=" + attributes +
+        return "BaseUsbEndpoint[address=" + address + ",attributes=" + attributes +
                ",maxPacketSize=" + maxPacketSize + ",interval=" + interval + "]";
-    }
-
-    public static final Parcelable.Creator<UsbEndpoint> CREATOR =
-        new Parcelable.Creator<UsbEndpoint>() {
-            public UsbEndpoint createFromParcel(Parcel in) {
-                int address = in.readInt();
-                int attributes = in.readInt();
-                int maxPacketSize = in.readInt();
-                int interval = in.readInt();
-                return new UsbEndpoint(address, attributes, maxPacketSize, interval);
-            }
-
-            public UsbEndpoint[] newArray(int size) {
-                return new UsbEndpoint[size];
-            }
-        };
-
-    public int describeContents() {
-        return 0;
-    }
-
-    public void writeToParcel(Parcel parcel, int flags) {
-        parcel.writeInt(address);
-        parcel.writeInt(attributes);
-        parcel.writeInt(maxPacketSize);
-        parcel.writeInt(interval);
     }
 
     private static final int INDEX_ADDRESS = 2;
@@ -156,12 +127,12 @@ public class UsbEndpoint implements Parcelable {
     private static final int INDEX_MAX_PACKET_SIZE = 4;
     private static final int INDEX_INTERVAL = 6;
 
-    static UsbEndpoint fromNativeObject(@NotNull ByteBuffer nativeObject) {
+    static BaseUsbEndpoint fromNativeObject(@NotNull BaseUsbDevice device, @NotNull ByteBuffer nativeObject) {
         final int address = 0xFF & nativeObject.get(INDEX_ADDRESS);
         final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
         final int maxPacketSize = (0xFF & nativeObject.get(INDEX_MAX_PACKET_SIZE))
                 | ((0xFF & nativeObject.get(INDEX_MAX_PACKET_SIZE + 1)) << 8);
         final int interval = 0xFF & nativeObject.get(INDEX_INTERVAL);
-        return new UsbEndpoint(address, attributes, maxPacketSize, interval);
+        return device.createEndpoint(address, attributes, maxPacketSize, interval);
     }
 }

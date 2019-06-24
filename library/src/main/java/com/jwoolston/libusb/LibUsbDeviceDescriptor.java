@@ -1,6 +1,6 @@
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
-import com.jwoolston.android.libusb.util.Preconditions;
+import com.jwoolston.libusb.util.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +17,7 @@ public class LibUsbDeviceDescriptor {
     private boolean isValid = true;
 
     @NotNull
-    static LibUsbDeviceDescriptor getDeviceDescriptor(@NotNull UsbDevice device) {
+    static LibUsbDeviceDescriptor getDeviceDescriptor(@NotNull BaseUsbDevice device) {
         return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptor(device.getNativeObject()));
     }
 

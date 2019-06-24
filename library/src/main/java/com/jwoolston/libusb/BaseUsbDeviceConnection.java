@@ -13,75 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
-import android.content.Context;
-
-import com.jwoolston.android.libusb.async.AsyncTransfer;
-import com.jwoolston.android.libusb.async.BulkTransferCallback;
-import com.jwoolston.android.libusb.async.ControlTransferCallback;
-import com.jwoolston.android.libusb.async.InterruptTransferCallback;
-import com.jwoolston.android.libusb.async.IsochronousTransferCallback;
+import com.jwoolston.libusb.async.AsyncTransfer;
+import com.jwoolston.libusb.async.BulkTransferCallback;
+import com.jwoolston.libusb.async.ControlTransferCallback;
+import com.jwoolston.libusb.async.InterruptTransferCallback;
+import com.jwoolston.libusb.async.IsochronousTransferCallback;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 
-/**
- * This class is used for sending and receiving data and control messages to a USB device. nstances of this class are
- * created by {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)}.
- */
-public class UsbDeviceConnection {
+public class BaseUsbDeviceConnection {
 
-    private static final String TAG = "UsbDeviceConnection";
-
-    private final UsbManager manager;
-    private final UsbDevice device;
-
-    private Context context;
+    private final BaseUsbManager manager;
+    private final BaseUsbDevice device;
 
     static void initialize() {
         if (!nativeInitialize()) {
-            throw new RuntimeException("Failed to initialize native layer for UsbDeviceConnection.");
+            throw new RuntimeException("Failed to initialize native layer for BaseUsbDeviceConnection.");
         }
     }
 
-    @NotNull
-    static UsbDeviceConnection fromAndroidConnection(@NotNull Context context, @NotNull UsbManager manager,
-                                                     @NotNull UsbDevice device) {
-        return new UsbDeviceConnection(context, manager, device);
-    }
-
     /**
-     * UsbDevice should only be instantiated by UsbService implementation
+     * BaseUsbDevice should only be instantiated by UsbService implementation
      */
-    private UsbDeviceConnection(@NotNull Context context, @NotNull UsbManager manager, @NotNull UsbDevice device) {
-        this.context = context;
+    BaseUsbDeviceConnection(@NotNull BaseUsbManager manager, @NotNull BaseUsbDevice device) {
         this.manager = manager;
         this.device = device;
-    }
-
-    /**
-     * @return The application context the connection was created for.
-     */
-    @Nullable
-    public Context getContext() {
-        return context;
     }
 
     /**
      * @return The device this connection is for.
      */
     @NotNull
-    public UsbDevice getDevice() {
+    public BaseUsbDevice getDevice() {
         return device;
     }
 
     /**
      * Releases all system resources related to the device. Once the object is closed it cannot be used again. The
-     * client must call {@link UsbManager#registerDevice(android.hardware.usb.UsbDevice)} again to retrieve a new
-     * instance to reestablish communication with the device.
+     * client must register the device with {@link BaseUsbManager} again to retrieve a new instance to reestablish
+     * communication with the device.
      */
     public void close() {
         manager.onClosingDevice();
@@ -111,54 +86,54 @@ public class UsbDeviceConnection {
     }
 
     /**
-     * Clears the stall condition on the provided {@link UsbEndpoint}.
+     * Clears the stall condition on the provided {@link BaseUsbEndpoint}.
      *
-     * @param endpoint The {@link UsbEndpoint} which should be cleared.
+     * @param endpoint The {@link BaseUsbEndpoint} which should be cleared.
      * @return {@link LibusbError} The libusb result.
      */
-    public LibusbError clearStall(@NotNull UsbEndpoint endpoint) {
+    public LibusbError clearStall(@NotNull BaseUsbEndpoint endpoint) {
         return LibusbError.fromNative(nativeClearStall(device.getNativeObject(), endpoint.getAddress()));
     }
 
     /**
-     * Claims exclusive access to a {@link UsbInterface}. This must be done before sending or receiving data on any
-     * {@link UsbEndpoint}s belonging to the interface.
+     * Claims exclusive access to a {@link BaseUsbInterface}. This must be done before sending or receiving data on any
+     * {@link BaseUsbEndpoint}s belonging to the interface.
      *
      * @param intf  the interface to claim
      * @param force true to disconnect kernel driver if necessary
      *
      * @return {@link LibusbError} The libusb result.
      */
-    public LibusbError claimInterface(UsbInterface intf, boolean force) {
+    public LibusbError claimInterface(BaseUsbInterface intf, boolean force) {
         return LibusbError.fromNative(nativeClaimInterface(device.getNativeObject(), intf.getId(), force));
     }
 
     /**
-     * Releases exclusive access to a {@link UsbInterface}.
+     * Releases exclusive access to a {@link BaseUsbInterface}.
      *
      * @return {@link LibusbError} The libusb result.
      */
-    public LibusbError releaseInterface(UsbInterface intf) {
+    public LibusbError releaseInterface(BaseUsbInterface intf) {
         return LibusbError.fromNative(nativeReleaseInterface(device.getNativeObject(), intf.getId()));
     }
 
     /**
-     * Sets the current {@link UsbInterface}. Used to select between two interfaces with the same ID but different
+     * Sets the current {@link BaseUsbInterface}. Used to select between two interfaces with the same ID but different
      * alternate setting.
      *
      * @return {@link LibusbError} The libusb result.
      */
-    public LibusbError setInterface(UsbInterface intf) {
+    public LibusbError setInterface(BaseUsbInterface intf) {
         return LibusbError.fromNative(nativeSetInterface(device.getNativeObject(), intf.getId(),
             intf.getAlternateSetting()));
     }
 
     /**
-     * Sets the device's current {@link UsbConfiguration}.
+     * Sets the device's current {@link BaseUsbConfiguration}.
      *
      * @return {@link LibusbError} The libusb result.
      */
-    public LibusbError setConfiguration(UsbConfiguration configuration) {
+    public LibusbError setConfiguration(BaseUsbConfiguration configuration) {
         return LibusbError.fromNative(nativeSetConfiguration(device.getNativeObject(), configuration.getId()));
     }
 
@@ -218,7 +193,7 @@ public class UsbDeviceConnection {
      * direction of the endpoint.
      * <p>
      * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
-     * {@link #bulkTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * {@link #bulkTransfer(BaseUsbEndpoint, byte[], int, int, int)}.
      * </p>
      *
      * @param endpoint the endpoint for this transaction
@@ -229,7 +204,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int bulkTransfer(UsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
+    public int bulkTransfer(BaseUsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
         return bulkTransfer(endpoint, buffer, 0, length, timeout);
     }
 
@@ -245,7 +220,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int bulkTransfer(UsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
+    public int bulkTransfer(BaseUsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         return nativeBulkRequest(device.getNativeObject(), endpoint.getAddress(), buffer, offset, length, timeout);
     }
@@ -255,7 +230,7 @@ public class UsbDeviceConnection {
      * direction of the endpoint.
      * <p>
      * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
-     * {@link #interruptTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * {@link #interruptTransfer(BaseUsbEndpoint, byte[], int, int, int)}.
      * </p>
      *
      * @param endpoint the endpoint for this transaction
@@ -266,7 +241,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int interruptTransfer(UsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
+    public int interruptTransfer(BaseUsbEndpoint endpoint, byte[] buffer, int length, int timeout) {
         return interruptTransfer(endpoint, buffer, 0, length, timeout);
     }
 
@@ -282,7 +257,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int interruptTransfer(UsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
+    public int interruptTransfer(BaseUsbEndpoint endpoint, byte[] buffer, int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         return nativeInterruptRequest(device.getNativeObject(), endpoint.getAddress(), buffer, offset, length, timeout);
     }
@@ -347,7 +322,7 @@ public class UsbDeviceConnection {
      * direction of the endpoint.
      * <p>
      * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
-     * {@link #bulkTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * {@link #bulkTransfer(BaseUsbEndpoint, byte[], int, int, int)}.
      * </p>
      *
      * @param callback    callback to be notified when transfer completes.
@@ -359,7 +334,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public LibusbError bulkTransferAsync(@NotNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public LibusbError bulkTransferAsync(@NotNull BulkTransferCallback callback, BaseUsbEndpoint endpoint, byte[] buffer,
                                          int length, int timeout) {
         return bulkTransferAsync(callback, endpoint, buffer, 0, length, timeout);
     }
@@ -377,7 +352,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public LibusbError bulkTransferAsync(@NotNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public LibusbError bulkTransferAsync(@NotNull BulkTransferCallback callback, BaseUsbEndpoint endpoint, byte[] buffer,
                                          int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         manager.startAsyncIfNeeded();
@@ -390,7 +365,7 @@ public class UsbDeviceConnection {
      * by the direction of the endpoint.
      * <p>
      * This method transfers data starting from index 0 in the buffer. To specify a different offset, use
-     * {@link #interruptTransfer(UsbEndpoint, byte[], int, int, int)}.
+     * {@link #interruptTransfer(BaseUsbEndpoint, byte[], int, int, int)}.
      * </p>
      *
      * @param callback    callback to be notified when transfer completes.
@@ -402,7 +377,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int interruptTransferAsync(@NotNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public int interruptTransferAsync(@NotNull InterruptTransferCallback callback, BaseUsbEndpoint endpoint, byte[] buffer,
                                       int length, int timeout) {
         return interruptTransferAsync(callback, endpoint, buffer, 0, length, timeout);
     }
@@ -420,7 +395,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int interruptTransferAsync(@NotNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public int interruptTransferAsync(@NotNull InterruptTransferCallback callback, BaseUsbEndpoint endpoint, byte[] buffer,
                                       int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         manager.startAsyncIfNeeded();
@@ -440,7 +415,7 @@ public class UsbDeviceConnection {
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
     public int isochronousTransfer(@NotNull IsochronousTransferCallback callback, @NotNull AsyncTransfer transfer,
-                                   UsbEndpoint endpoint, ByteBuffer buffer, int timeout) {
+                                   BaseUsbEndpoint endpoint, ByteBuffer buffer, int timeout) {
         manager.startAsyncIfNeeded();
         return nativeIsochronousRequestAsync(callback, device.getNativeObject(), transfer.getNativeObject(),
             endpoint.getAddress(), buffer, buffer.capacity(), timeout);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.jwoolston.android.libusb.util;
+package com.jwoolston.libusb.util;
 
 /**
  * Clone of Android's HexDump class, for use in debugging. Cosmetic changes

@@ -1,10 +1,12 @@
-package com.jwoolston.android.libusb.async;
+package com.jwoolston.libusb.async;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import com.jwoolston.android.libusb.LibusbError;
-import com.jwoolston.android.libusb.UsbDeviceConnection;
-import com.jwoolston.android.libusb.UsbEndpoint;
+import com.jwoolston.libusb.BaseUsbDeviceConnection;
+import com.jwoolston.libusb.BaseUsbEndpoint;
+import com.jwoolston.libusb.LibusbError;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -16,12 +18,12 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
     private static final String TAG = "IsochronousAsyncTransfer";
 
     private final IsochronousTransferCallback callback;
-    private final UsbDeviceConnection         connection;
+    private final BaseUsbDeviceConnection connection;
     private final int                         packetCount;
     private final int                         packetSize;
 
-    public IsochronousAsyncTransfer(@NonNull IsochronousTransferCallback callback, @NonNull UsbEndpoint endpoint,
-                                    @NonNull UsbDeviceConnection connection, int packetSize, int packetCount)
+    public IsochronousAsyncTransfer(@NotNull IsochronousTransferCallback callback, @NotNull BaseUsbEndpoint endpoint,
+                                    @NotNull BaseUsbDeviceConnection connection, int packetSize, int packetCount)
             throws IOException {
         super(endpoint);
         this.callback = callback;
@@ -37,7 +39,7 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
         this.packetSize = packetSize;
     }
 
-    public void submit(@NonNull ByteBuffer buffer, int timeout) throws IllegalStateException {
+    public void submit(@NotNull ByteBuffer buffer, int timeout) throws IllegalStateException {
         if (!buffer.isDirect()) {
             throw new IllegalArgumentException("ByteBuffers passed to this method must be direct allocations.");
         }
@@ -58,7 +60,7 @@ public class IsochronousAsyncTransfer extends AsyncTransfer {
     @Nullable
     private native ByteBuffer nativeAllocate(int numberPackets);
 
-    private native int nativeSetupPackets(@NonNull ByteBuffer nativeDevice, @NonNull ByteBuffer nativeObject,
+    private native int nativeSetupPackets(@NotNull ByteBuffer nativeDevice, @NotNull ByteBuffer nativeObject,
                                           int endpoint, int packetSize);
 
 }

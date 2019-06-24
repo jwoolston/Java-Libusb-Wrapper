@@ -1,6 +1,9 @@
 package com.jwoolston.android.libusb;
 
-import com.jwoolston.android.libusb.async.BulkTransferCallback;
+import com.jwoolston.libusb.LibusbError;
+import com.jwoolston.libusb.UsbDeviceConnection;
+import com.jwoolston.libusb.UsbEndpoint;
+import com.jwoolston.libusb.async.BulkTransferCallback;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
 import java.io.IOException;
 import java.nio.ByteBuffer;

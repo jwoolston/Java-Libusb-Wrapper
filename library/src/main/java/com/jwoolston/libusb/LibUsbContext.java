@@ -1,6 +1,6 @@
-package com.jwoolston.android.libusb;
+package com.jwoolston.libusb;
 
-import com.jwoolston.android.libusb.util.Preconditions;
+import com.jwoolston.libusb.util.Preconditions;
 
 import org.jetbrains.annotations.NotNull;
 

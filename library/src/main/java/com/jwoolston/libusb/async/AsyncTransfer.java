@@ -1,9 +1,9 @@
-package com.jwoolston.android.libusb.async;
+package com.jwoolston.libusb.async;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import com.jwoolston.libusb.BaseUsbEndpoint;
 
-import com.jwoolston.android.libusb.UsbEndpoint;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 
@@ -12,11 +12,11 @@ import java.nio.ByteBuffer;
  */
 public abstract class AsyncTransfer {
 
-    private final UsbEndpoint endpoint;
+    private final BaseUsbEndpoint endpoint;
 
     private ByteBuffer nativeObject;
 
-    public AsyncTransfer(@NonNull UsbEndpoint endpoint) {
+    public AsyncTransfer(@NotNull BaseUsbEndpoint endpoint) {
         this.endpoint = endpoint;
     }
 
@@ -30,13 +30,13 @@ public abstract class AsyncTransfer {
         this.nativeObject = nativeObject;
     }
 
-    @NonNull
+    @NotNull
     public ByteBuffer getNativeObject() {
         return nativeObject;
     }
 
-    @NonNull
-    public UsbEndpoint getEndpoint() {
+    @NotNull
+    public BaseUsbEndpoint getEndpoint() {
         return endpoint;
     }
 
@@ -46,5 +46,5 @@ public abstract class AsyncTransfer {
         super.finalize();
     }
 
-    private native void nativeDestroy(@NonNull ByteBuffer nativeObject);
+    private native void nativeDestroy(@NotNull ByteBuffer nativeObject);
 }
