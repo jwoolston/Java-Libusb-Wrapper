@@ -35,7 +35,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags ""
+                cppFlags "-DJNI_WRAPPER"
                 arguments '-DANDROID_ARM_NEON=TRUE'
             }
         }

@@ -1,17 +1,28 @@
-#ifndef LOGGING_H
-#define LOGGING_H
+//
+// Created by ideal on 4/10/2019.
+//
 
-#include <android/log.h>
+#ifndef FREEIMAGE_LOGGING_H
+#define FREEIMAGE_LOGGING_H
 
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG,__VA_ARGS__)
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG  , LOG_TAG,__VA_ARGS__)
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO   , LOG_TAG,__VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN   , LOG_TAG,__VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR  , LOG_TAG,__VA_ARGS__)
-#define LOGSIMPLE(...)
+#include <jni.h>
 
-void log_dump(const char *tag, const void *addr, int len, int linelen);
+#define LOGV(...) __arbor_verbose(LOG_TAG, __VA_ARGS__)
+#define LOGD(...) __arbor_debug(LOG_TAG, __VA_ARGS__)
+#define LOGI(...) __arbor_info(LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __arbor_warn(LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __arbor_error(LOG_TAG, __VA_ARGS__)
 
-void log_dumpf(const char *tag, const char *fmt, const void *addr, int len, int linelen);
+void initializeArbor(JNIEnv *env);
 
-#endif //LOGGING_H
+void __arbor_verbose(const char *tag, const char *fmt, ...);
+
+void __arbor_debug(const char *tag, const char *fmt, ...);
+
+void __arbor_info(const char *tag, const char *fmt, ...);
+
+void __arbor_warn(const char *tag, const char *fmt, ...);
+
+void __arbor_error(const char *tag, const char *fmt, ...);
+
+#endif //FREEIMAGE_LOGGING_H

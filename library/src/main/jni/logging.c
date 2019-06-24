@@ -1,58 +1,109 @@
-//
-// Created by ideal on 6/18/2018.
-//
+#include <stdio.h>
+#include "logging.h"
+#include "stdbool.h"
 
-#include <logging.h>
+#ifdef __ANDROID__
+#include "android/log.h"
+#endif
 
-static inline char hdigit(int n) {
-    return "0123456789ABCDEF"[n & 0xF];
+JavaVM *javaVM;
+jobject arborClass;
+jobject branchClass;
+jobject objectClass;
+jmethodID arborTag;
+jmethodID branchVerbose;
+jmethodID branchDebug;
+jmethodID branchInfo;
+jmethodID branchWarning;
+jmethodID branchError;
+jmethodID branchWtf;
+
+#define LOG_TAG "logging-native"
+
+void initializeArbor(JNIEnv *env) {
+    (*env)->GetJavaVM(env, &javaVM);
+    jclass localClass = (*env)->FindClass(env, "com/toxicbakery/logging/Arbor");
+    arborClass = (jclass) (*env)->NewGlobalRef(env, localClass);
+    localClass = (*env)->FindClass(env, "com/toxicbakery/logging/Branch");
+    branchClass = (jclass) (*env)->NewGlobalRef(env, localClass);
+    localClass = (*env)->FindClass(env, "java/lang/Object");
+    objectClass = (*env)->NewGlobalRef(env, localClass);
+    arborTag = (*env)->GetStaticMethodID(env, arborClass, "tag", "(Ljava/lang/String;)Lcom/toxicbakery/logging/Branch;");
+    branchVerbose = (*env)->GetMethodID(env, branchClass, "v", "(Ljava/lang/String;[Ljava/lang/Object;)V");
+    branchDebug = (*env)->GetMethodID(env, branchClass, "d", "(Ljava/lang/String;[Ljava/lang/Object;)V");
+    branchInfo = (*env)->GetMethodID(env, branchClass, "i", "(Ljava/lang/String;[Ljava/lang/Object;)V");
+    branchWarning = (*env)->GetMethodID(env, branchClass, "w", "(Ljava/lang/String;[Ljava/lang/Object;)V");
+    branchError = (*env)->GetMethodID(env, branchClass, "e", "(Ljava/lang/String;[Ljava/lang/Object;)V");
+    branchWtf = (*env)->GetMethodID(env, branchClass, "wtf", "(Ljava/lang/String;[Ljava/lang/Object;)V");
 }
 
-#define LEN_LIMIT 8
-#define SUBSTITUTE_CHAR '`'
-
-static const char *dumpline(char *dest, int linelen, const char *src, const char *srcend) {
-    if (src >= srcend) {
-        return 0;
-    }
-    int i;
-    unsigned long s = (unsigned long) src;
-    for (i = 0; i < 8; i++) {
-        dest[i] = hdigit(s >> (28 - i * 4));
-    }
-    dest[8] = ' ';
-    dest += 9;
-    for (i = 0; i < linelen / 4; i++) {
-        if (src + i < srcend) {
-            dest[i * 3] = hdigit(src[i] >> 4);
-            dest[i * 3 + 1] = hdigit(src[i]);
-            dest[i * 3 + 2] = ' ';
-            dest[linelen / 4 * 3 + i] = src[i] >= ' ' && src[i] < 0x7f ? src[i] : SUBSTITUTE_CHAR;
-        } else {
-            dest[i * 3] = dest[i * 3 + 1] = dest[i * 3 + 2] = dest[linelen / 4 * 3 + i] = ' ';
+void arborLog(jmethodID method, const char *tag, const char *fmt, va_list args) {
+    JNIEnv *jniEnv;
+    // double check it's all ok
+    int getEnvStat = (*javaVM)->GetEnv(javaVM, (void **) &jniEnv, JNI_VERSION_1_6);
+    bool didAttach = false;
+    if (getEnvStat == JNI_EDETACHED) {
+        if ((*javaVM)->AttachCurrentThread(javaVM, &jniEnv, NULL) == 0) {
+            didAttach = true;
         }
     }
-    return src + i;
-}
 
-void log_dumpf(const char *tag, const char *fmt, const void *addr, int len, int linelen) {
-#if LEN_LIMIT
-    if (len > linelen * LEN_LIMIT) {
-        len = linelen * LEN_LIMIT;
-    }
+    jstring tagString = (*jniEnv)->NewStringUTF(jniEnv, tag);
+    jobject branch = (*jniEnv)->CallStaticObjectMethod(jniEnv, arborClass, arborTag, tagString);
+    if ((*jniEnv)->ExceptionOccurred(jniEnv)) {
+#ifdef __ANDROID__
+        __android_log_print(ANDROID_LOG_ERROR, "Native Log", "Native logging failed. Tree: %p", branch);
+#else
+        fprintf(stderr, "Native logging failed. Tree: %p", branch);
 #endif
-    linelen *= 4;
-    static char _buf[4096];
-    char *buf = _buf;//(char*)alloca(linelen+1); // alloca() causes the initialization to fail!!!!
-    buf[linelen] = 0;
-    const char *start = (char *) addr;
-    const char *cur = start;
-    const char *end = start + len;
-    while (!!(cur = dumpline(buf, linelen, cur, start + len))) {
-        __android_log_print(ANDROID_LOG_DEBUG, tag, fmt, buf);
+        return;
+    }
+
+    const char message[500];
+    vsnprintf(&message, 500, fmt, args);
+    jstring messageString = (*jniEnv)->NewStringUTF(jniEnv, message);
+
+    jobjectArray array;
+    array = (*jniEnv)->NewObjectArray(jniEnv, 0, objectClass, NULL);
+
+    (*jniEnv)->CallVoidMethod(jniEnv, branch, method, messageString, array);
+
+    if (didAttach) {
+        (*javaVM)->DetachCurrentThread(javaVM);
     }
 }
 
-void log_dump(const char *tag, const void *addr, int len, int linelen) {
-    log_dumpf(tag, "\n%s\n", addr, len, linelen);
+void __arbor_verbose(const char *tag, const char *fmt, ...) {
+    va_list localArgs;
+    va_start(localArgs, fmt);
+    arborLog(branchVerbose, tag, fmt, localArgs);
+    va_end(localArgs);
+}
+
+void __arbor_debug(const char *tag, const char *fmt, ...) {
+    va_list localArgs;
+    va_start(localArgs, fmt);
+    arborLog(branchDebug, tag, fmt, localArgs);
+    va_end(localArgs);
+}
+
+void __arbor_info(const char *tag, const char *fmt, ...) {
+    va_list localArgs;
+    va_start(localArgs, fmt);
+    arborLog(branchInfo, tag, fmt, localArgs);
+    va_end(localArgs);
+}
+
+void __arbor_warn(const char *tag, const char *fmt, ...) {
+    va_list localArgs;
+    va_start(localArgs, fmt);
+    arborLog(branchWarning, tag, fmt, localArgs);
+    va_end(localArgs);
+}
+
+void __arbor_error(const char *tag, const char *fmt, ...) {
+    va_list localArgs;
+    va_start(localArgs, fmt);
+    arborLog(branchError, tag, fmt, localArgs);
+    va_end(localArgs);
 }

@@ -8,6 +8,8 @@
 
 JNIEXPORT jobject JNICALL
 Java_com_jwoolston_android_libusb_UsbManager_nativeInitialize(JNIEnv *env, jobject instance) {
+    // Initialize Arbor
+    initializeArbor(env);
     LOGD("Initializing libusb.");
     struct libusb_context *ctx;
     int r = libusb_init(&ctx);

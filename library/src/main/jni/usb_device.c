@@ -30,7 +30,7 @@ Java_com_jwoolston_android_libusb_UsbDevice_wrapDevice(JNIEnv *env, jclass type,
     struct libusb_device_handle *deviceHandle;
 
     struct libusb_context *ctx = (struct libusb_context *) (*env)->GetDirectBufferAddress(env, context);
-    int ret = libusb_wrap_fd(ctx, fd, &deviceHandle);
+    int ret =  libusb_wrap_sys_device(ctx, fd, &deviceHandle);
 
     if (deviceHandle == NULL) {
         LOGE("Failed to wrap usb device file descriptor. Error: %s", libusb_strerror((enum libusb_error) ret));
