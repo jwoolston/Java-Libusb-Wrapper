@@ -17,9 +17,11 @@ package com.jwoolston.android.libusb;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import com.jwoolston.android.libusb.util.Preconditions;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,8 +198,8 @@ public class UsbInterface implements Parcelable {
     private static final int INDEX_INTERFACE_PROTOCOL = 7;
     private static final int INDEX_INTERFACE_STRING_INDEX = 8;
 
-    @NonNull
-    static List<UsbInterface> fromNativeObject(@NonNull UsbDevice device, @NonNull ByteBuffer nativeInterface) {
+    @NotNull
+    static List<UsbInterface> fromNativeObject(@NotNull UsbDevice device, @NotNull ByteBuffer nativeInterface) {
         final List<UsbInterface> interfaces = new ArrayList<>();
         UsbInterface usbInterface = null;
         do {
@@ -210,7 +212,7 @@ public class UsbInterface implements Parcelable {
     }
 
     @Nullable
-    private static UsbInterface fromNativeDescriptor(@NonNull UsbDevice device, @NonNull ByteBuffer nativeObject,
+    private static UsbInterface fromNativeDescriptor(@NotNull UsbDevice device, @NotNull ByteBuffer nativeObject,
                                                      int index) {
         final ByteBuffer nativeDescriptor = nativeGetInterfaceDescriptor(nativeObject, index);
 
@@ -243,8 +245,8 @@ public class UsbInterface implements Parcelable {
     }
 
     @Nullable
-    private static native ByteBuffer nativeGetInterfaceDescriptor(@NonNull ByteBuffer nativeObject, int index);
+    private static native ByteBuffer nativeGetInterfaceDescriptor(@NotNull ByteBuffer nativeObject, int index);
 
     @Nullable
-    private static native ByteBuffer nativeGetEndpoint(@NonNull ByteBuffer nativeDescriptor, int index);
+    private static native ByteBuffer nativeGetEndpoint(@NotNull ByteBuffer nativeDescriptor, int index);
 }

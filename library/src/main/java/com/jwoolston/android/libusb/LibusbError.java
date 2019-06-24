@@ -1,6 +1,6 @@
 package com.jwoolston.android.libusb;
 
-import android.support.annotation.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Error codes. Most libusb functions return 0 on success or one of these codes on failure.
@@ -62,7 +62,7 @@ public enum LibusbError {
         return getDescriptionString(code);
     }
 
-    @NonNull
+    @NotNull
     public static LibusbError fromNative(int code) {
         for (LibusbError error : values()) {
             if (error.code == code) {

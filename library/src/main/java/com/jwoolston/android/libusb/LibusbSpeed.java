@@ -1,6 +1,6 @@
 package com.jwoolston.android.libusb;
 
-import android.support.annotation.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Speed codes. Indicates the speed at which the device is operating.
@@ -30,7 +30,7 @@ public enum LibusbSpeed {
         this.code = code;
     }
 
-    @NonNull
+    @NotNull
     public static LibusbSpeed fromNative(int code) {
         for (LibusbSpeed error : values()) {
             if (error.code == code) {

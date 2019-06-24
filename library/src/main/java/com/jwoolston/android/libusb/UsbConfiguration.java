@@ -17,9 +17,12 @@ package com.jwoolston.android.libusb;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
 import com.jwoolston.android.libusb.util.Preconditions;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +129,7 @@ public class UsbConfiguration implements Parcelable {
      *
      * @return the interface
      */
-    public @NonNull
+    public @NotNull
     UsbInterface getInterface(int index) {
         return (UsbInterface) interfaces[index];
     }
@@ -134,7 +137,7 @@ public class UsbConfiguration implements Parcelable {
     /**
      * Only used by UsbService implementation
      */
-    public void setInterfaces(@NonNull Parcelable[] interfaces) {
+    public void setInterfaces(@NotNull Parcelable[] interfaces) {
         this.interfaces = Preconditions.checkArrayElementsNotNull(interfaces, "interfaces");
     }
 
@@ -187,8 +190,8 @@ public class UsbConfiguration implements Parcelable {
     private static final int INDEX_ATTRIBUTES = 7;
     private static final int INDEX_MAX_POWER = 8;
 
-    @NonNull
-    static UsbConfiguration fromNativeObject(@NonNull UsbDevice device, int configuration) {
+    @NotNull
+    static UsbConfiguration fromNativeObject(@NotNull UsbDevice device, int configuration) {
         // Get the native configuration object. Make sure you free it!
         final ByteBuffer nativeObject = nativeGetConfiguration(device.getNativeObject(), configuration);
         final int numberInterfaces = 0xFF & nativeObject.get(INDEX_NUMBER_INTERFACES);
@@ -213,7 +216,7 @@ public class UsbConfiguration implements Parcelable {
         return usbConfiguration;
     }
 
-    private static native ByteBuffer nativeGetConfiguration(@NonNull ByteBuffer device, int configuration);
+    private static native ByteBuffer nativeGetConfiguration(@NotNull ByteBuffer device, int configuration);
 
     /**
      *
@@ -221,7 +224,7 @@ public class UsbConfiguration implements Parcelable {
      * @param interfaceIndex
      * @return
      */
-    private static native ByteBuffer nativeGetInterface(@NonNull ByteBuffer nativeObject, int interfaceIndex);
+    private static native ByteBuffer nativeGetInterface(@NotNull ByteBuffer nativeObject, int interfaceIndex);
 
-    private static native void nativeDestroy(@NonNull ByteBuffer nativeObject);
+    private static native void nativeDestroy(@NotNull ByteBuffer nativeObject);
 }

@@ -1,8 +1,8 @@
 package com.jwoolston.android.libusb;
 
-import android.support.annotation.NonNull;
-
 import com.jwoolston.android.libusb.util.Preconditions;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
@@ -18,7 +18,7 @@ public class LibUsbContext {
         this.nativeObject = nativeObject;
     }
 
-    @NonNull
+    @NotNull
     public ByteBuffer getNativeObject() {
         return nativeObject;
     }

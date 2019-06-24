@@ -17,7 +17,9 @@ package com.jwoolston.android.libusb;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -154,7 +156,7 @@ public class UsbEndpoint implements Parcelable {
     private static final int INDEX_MAX_PACKET_SIZE = 4;
     private static final int INDEX_INTERVAL = 6;
 
-    static UsbEndpoint fromNativeObject(@NonNull ByteBuffer nativeObject) {
+    static UsbEndpoint fromNativeObject(@NotNull ByteBuffer nativeObject) {
         final int address = 0xFF & nativeObject.get(INDEX_ADDRESS);
         final int attributes = 0xFF & nativeObject.get(INDEX_ATTRIBUTES);
         final int maxPacketSize = (0xFF & nativeObject.get(INDEX_MAX_PACKET_SIZE))

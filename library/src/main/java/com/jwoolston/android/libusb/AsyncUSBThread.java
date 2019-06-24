@@ -1,7 +1,8 @@
 package com.jwoolston.android.libusb;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
+import com.toxicbakery.logging.Arbor;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
@@ -16,10 +17,10 @@ public class AsyncUSBThread extends Thread {
 
     private volatile boolean keepRunning = true;
 
-    @NonNull
+    @NotNull
     private final LibUsbContext context;
 
-    AsyncUSBThread(@NonNull LibUsbContext context) {
+    AsyncUSBThread(@NotNull LibUsbContext context) {
         super(THREAD_NAME);
         this.context = context;
     }
@@ -34,7 +35,7 @@ public class AsyncUSBThread extends Thread {
             try {
                 LibusbError result = LibusbError.fromNative(nativeHandleEvents(context.getNativeObject()));
             } catch (Exception e) {
-                Log.e(TAG, "Async USB handling detected exception.", e);
+                Arbor.e(e, "Async USB handling detected exception.");
             }
         }
     }
@@ -45,5 +46,5 @@ public class AsyncUSBThread extends Thread {
         super.interrupt();
     }
 
-    private static native int nativeHandleEvents(@NonNull ByteBuffer context);
+    private static native int nativeHandleEvents(@NotNull ByteBuffer context);
 }

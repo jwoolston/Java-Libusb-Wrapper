@@ -1,8 +1,10 @@
 package com.jwoolston.android.libusb;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import com.jwoolston.android.libusb.util.Preconditions;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -14,22 +16,22 @@ public class LibUsbDeviceDescriptor {
 
     private boolean isValid = true;
 
-    @NonNull
-    static LibUsbDeviceDescriptor getDeviceDescriptor(@NonNull UsbDevice device) {
+    @NotNull
+    static LibUsbDeviceDescriptor getDeviceDescriptor(@NotNull UsbDevice device) {
         return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptor(device.getNativeObject()));
     }
 
     @Nullable
-    private static native ByteBuffer nativeGetDeviceDescriptor(@NonNull ByteBuffer device);
+    private static native ByteBuffer nativeGetDeviceDescriptor(@NotNull ByteBuffer device);
 
-    private static native void nativeDestroy(@NonNull ByteBuffer descriptor);
+    private static native void nativeDestroy(@NotNull ByteBuffer descriptor);
 
     private LibUsbDeviceDescriptor(ByteBuffer nativeObject) {
         Preconditions.checkNotNull(nativeObject, "LibUsbDeviceDescriptor Initialization failed.");
         this.nativeObject = nativeObject;
     }
 
-    @NonNull
+    @NotNull
     ByteBuffer getNativeObject() {
         if (isValid) {
             return nativeObject;

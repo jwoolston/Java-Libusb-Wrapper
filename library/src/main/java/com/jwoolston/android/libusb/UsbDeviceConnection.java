@@ -16,8 +16,6 @@
 package com.jwoolston.android.libusb;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.jwoolston.android.libusb.async.AsyncTransfer;
 import com.jwoolston.android.libusb.async.BulkTransferCallback;
@@ -25,8 +23,10 @@ import com.jwoolston.android.libusb.async.ControlTransferCallback;
 import com.jwoolston.android.libusb.async.InterruptTransferCallback;
 import com.jwoolston.android.libusb.async.IsochronousTransferCallback;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 /**
  * This class is used for sending and receiving data and control messages to a USB device. nstances of this class are
@@ -47,16 +47,16 @@ public class UsbDeviceConnection {
         }
     }
 
-    @NonNull
-    static UsbDeviceConnection fromAndroidConnection(@NonNull Context context, @NonNull UsbManager manager,
-                                                     @NonNull UsbDevice device) {
+    @NotNull
+    static UsbDeviceConnection fromAndroidConnection(@NotNull Context context, @NotNull UsbManager manager,
+                                                     @NotNull UsbDevice device) {
         return new UsbDeviceConnection(context, manager, device);
     }
 
     /**
      * UsbDevice should only be instantiated by UsbService implementation
      */
-    private UsbDeviceConnection(@NonNull Context context, @NonNull UsbManager manager, @NonNull UsbDevice device) {
+    private UsbDeviceConnection(@NotNull Context context, @NotNull UsbManager manager, @NotNull UsbDevice device) {
         this.context = context;
         this.manager = manager;
         this.device = device;
@@ -73,7 +73,7 @@ public class UsbDeviceConnection {
     /**
      * @return The device this connection is for.
      */
-    @NonNull
+    @NotNull
     public UsbDevice getDevice() {
         return device;
     }
@@ -116,7 +116,7 @@ public class UsbDeviceConnection {
      * @param endpoint The {@link UsbEndpoint} which should be cleared.
      * @return {@link LibusbError} The libusb result.
      */
-    public LibusbError clearStall(@NonNull UsbEndpoint endpoint) {
+    public LibusbError clearStall(@NotNull UsbEndpoint endpoint) {
         return LibusbError.fromNative(nativeClearStall(device.getNativeObject(), endpoint.getAddress()));
     }
 
@@ -309,7 +309,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
+    public int controlTransferAsync(@NotNull ControlTransferCallback callback, int requestType, int request, int value,
                                     int index, byte[] buffer, int length, int timeout) {
         return controlTransferAsync(callback, requestType, request, value, index, buffer, 0, length, timeout);
     }
@@ -333,7 +333,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int controlTransferAsync(@NonNull ControlTransferCallback callback, int requestType, int request, int value,
+    public int controlTransferAsync(@NotNull ControlTransferCallback callback, int requestType, int request, int value,
                                     int index, byte[] buffer, int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         manager.startAsyncIfNeeded();
@@ -359,7 +359,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public LibusbError bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public LibusbError bulkTransferAsync(@NotNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                          int length, int timeout) {
         return bulkTransferAsync(callback, endpoint, buffer, 0, length, timeout);
     }
@@ -377,7 +377,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public LibusbError bulkTransferAsync(@NonNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public LibusbError bulkTransferAsync(@NotNull BulkTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                          int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         manager.startAsyncIfNeeded();
@@ -402,7 +402,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int interruptTransferAsync(@NonNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public int interruptTransferAsync(@NotNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                       int length, int timeout) {
         return interruptTransferAsync(callback, endpoint, buffer, 0, length, timeout);
     }
@@ -420,7 +420,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int interruptTransferAsync(@NonNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
+    public int interruptTransferAsync(@NotNull InterruptTransferCallback callback, UsbEndpoint endpoint, byte[] buffer,
                                       int offset, int length, int timeout) {
         checkBounds(buffer, offset, length);
         manager.startAsyncIfNeeded();
@@ -439,7 +439,7 @@ public class UsbDeviceConnection {
      *
      * @return length of data transferred (or zero) for success, or negative value for failure
      */
-    public int isochronousTransfer(@NonNull IsochronousTransferCallback callback, @NonNull AsyncTransfer transfer,
+    public int isochronousTransfer(@NotNull IsochronousTransferCallback callback, @NotNull AsyncTransfer transfer,
                                    UsbEndpoint endpoint, ByteBuffer buffer, int timeout) {
         manager.startAsyncIfNeeded();
         return nativeIsochronousRequestAsync(callback, device.getNativeObject(), transfer.getNativeObject(),
@@ -460,7 +460,7 @@ public class UsbDeviceConnection {
      *
      * @return {@link String } The device serial number
      */
-    @NonNull
+    @NotNull
     public String getSerial() {
         return device.getSerialNumber();
     }
@@ -474,44 +474,44 @@ public class UsbDeviceConnection {
 
     private static native boolean nativeInitialize();
 
-    private native void nativeClose(@NonNull ByteBuffer device);
+    private native void nativeClose(@NotNull ByteBuffer device);
 
     @Nullable
     private native byte[] nativeGetRawDescriptor(int fd);
 
-    private native int nativeClearStall(@NonNull ByteBuffer device, int address);
+    private native int nativeClearStall(@NotNull ByteBuffer device, int address);
 
-    private native int nativeClaimInterface(@NonNull ByteBuffer device, int interfaceID, boolean force);
+    private native int nativeClaimInterface(@NotNull ByteBuffer device, int interfaceID, boolean force);
 
-    private native int nativeReleaseInterface(@NonNull ByteBuffer device, int interfaceID);
+    private native int nativeReleaseInterface(@NotNull ByteBuffer device, int interfaceID);
 
-    private native int nativeSetInterface(@NonNull ByteBuffer device, int interfaceID, int alternateSetting);
+    private native int nativeSetInterface(@NotNull ByteBuffer device, int interfaceID, int alternateSetting);
 
-    private native int nativeSetConfiguration(@NonNull ByteBuffer device, int configurationID);
+    private native int nativeSetConfiguration(@NotNull ByteBuffer device, int configurationID);
 
-    private native int nativeControlRequest(@NonNull ByteBuffer device, int requestType, int request, int value,
+    private native int nativeControlRequest(@NotNull ByteBuffer device, int requestType, int request, int value,
                                             int index, byte[] buffer, int offset, int length, int timeout);
 
-    private native int nativeControlRequestAsync(@NonNull ByteBuffer device, @NonNull ControlTransferCallback callback,
+    private native int nativeControlRequestAsync(@NotNull ByteBuffer device, @NotNull ControlTransferCallback callback,
                                                  int requestType, int request, int value, int index, byte[] buffer,
                                                  int offset, int length, int timeout);
 
-    private native int nativeBulkRequestAsync(@NonNull ByteBuffer device, @NonNull BulkTransferCallback callback,
+    private native int nativeBulkRequestAsync(@NotNull ByteBuffer device, @NotNull BulkTransferCallback callback,
                                               int address, byte[] buffer, int offset, int length, int timeout);
 
-    private native int nativeInterruptRequestAsync(@NonNull InterruptTransferCallback callback,
-                                                   @NonNull ByteBuffer device, int address, byte[] buffer,
+    private native int nativeInterruptRequestAsync(@NotNull InterruptTransferCallback callback,
+                                                   @NotNull ByteBuffer device, int address, byte[] buffer,
                                                    int offset, int length, int timeout);
 
-    private native int nativeIsochronousRequestAsync(@NonNull IsochronousTransferCallback callback,
-                                                     @NonNull ByteBuffer device, @NonNull ByteBuffer transfer,
-                                                     int address, @NonNull ByteBuffer buffer, int length, int timeout);
+    private native int nativeIsochronousRequestAsync(@NotNull IsochronousTransferCallback callback,
+                                                     @NotNull ByteBuffer device, @NotNull ByteBuffer transfer,
+                                                     int address, @NotNull ByteBuffer buffer, int length, int timeout);
 
-    private native int nativeBulkRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
+    private native int nativeBulkRequest(@NotNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
                                          int length, int timeout);
 
-    private native int nativeInterruptRequest(@NonNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
+    private native int nativeInterruptRequest(@NotNull ByteBuffer device, int endpoint, byte[] buffer, int offset,
                                               int length, int timeout);
 
-    private native int nativeResetDevice(@NonNull ByteBuffer device);
+    private native int nativeResetDevice(@NotNull ByteBuffer device);
 }

@@ -16,7 +16,7 @@ include_directories(
         ../library/libusb/android
         ../library/libusb/libusb
         ../library/libusb/libusb/os
-        ../library/src/main/jni)
+        ../library/jni)
 
 # Defines the source code for the library
 set(libusb_SRCS

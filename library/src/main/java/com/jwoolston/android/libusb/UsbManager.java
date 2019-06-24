@@ -16,9 +16,11 @@
 package com.jwoolston.android.libusb;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.Log;
+
+import com.toxicbakery.logging.Arbor;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -53,18 +55,18 @@ public class UsbManager {
     @Nullable
     private native ByteBuffer nativeInitialize();
 
-    private native void nativeSetLoggingLevel(@NonNull ByteBuffer nativeObject, int level);
+    private native void nativeSetLoggingLevel(@NotNull ByteBuffer nativeObject, int level);
 
-    private native void nativeDestroy(@NonNull ByteBuffer context);
+    private native void nativeDestroy(@NotNull ByteBuffer context);
 
-    public UsbManager(@NonNull Context context) {
+    public UsbManager(@NotNull Context context) {
         this.context = context.getApplicationContext();
         androidUsbManager = (android.hardware.usb.UsbManager) context.getSystemService(Context.USB_SERVICE);
         libUsbContext = new LibUsbContext(nativeInitialize());
         UsbDeviceConnection.initialize();
     }
 
-    public void setNativeLogLevel(@NonNull LoggingLevel level) {
+    public void setNativeLogLevel(@NotNull LoggingLevel level) {
         nativeSetLoggingLevel(libUsbContext.getNativeObject(), level.ordinal());
     }
 
@@ -74,14 +76,14 @@ public class UsbManager {
         }
     }
 
-    @NonNull
-    public UsbDeviceConnection registerDevice(@NonNull android.hardware.usb.UsbDevice device) throws
+    @NotNull
+    public UsbDeviceConnection registerDevice(@NotNull android.hardware.usb.UsbDevice device) throws
         DevicePermissionDenied {
         synchronized (cacheLock) {
             final String key = device.getDeviceName();
             if (localConnectionCache.containsKey(key)) {
                 // We have already dealt with this device, do nothing
-                Log.d(TAG, "returning cached device.");
+                Arbor.d("returning cached device.");
                 return localConnectionCache.get(key);
             } else {
                 android.hardware.usb.UsbDeviceConnection connection = androidUsbManager.openDevice(device);
@@ -100,7 +102,7 @@ public class UsbManager {
         }
     }
 
-    void unregisterDevice(@NonNull UsbDevice device) {
+    void unregisterDevice(@NotNull UsbDevice device) {
         synchronized (cacheLock) {
             final String key = device.getDeviceName();
             localConnectionCache.remove(key);
@@ -152,7 +154,7 @@ public class UsbManager {
 
     void startAsyncIfNeeded() {
         if (asyncUsbThread == null) {
-            Log.d(TAG, "Starting async usb thread.");
+            Arbor.d("Starting async usb thread.");
             asyncUsbThread = new AsyncUSBThread(libUsbContext);
             asyncUsbThread.start();
         }

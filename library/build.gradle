@@ -2,6 +2,20 @@ plugins {
     id 'java-library'
 }
 
+sourceCompatibility = "7"
+targetCompatibility = "7"
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Logging
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation("com.ToxicBakery.logging:arbor-jvm:$arbor_version")
+
+    // Utils
+    implementation 'org.jetbrains:annotations:16.0.1'
+}
+
 //dokka {
 //    noStdlibLink = false
 //    includeNonPublic = false
