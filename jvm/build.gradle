@@ -1,0 +1,13 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    api project(':library')
+
+    // Utils
+    implementation 'org.jetbrains:annotations:16.0.1'
+}
+
+sourceCompatibility = "8"
+targetCompatibility = "8"

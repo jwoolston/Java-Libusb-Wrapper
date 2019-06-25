@@ -2,7 +2,6 @@
 // Created by Jared Woolston (Jared.Woolston@gmail.com)
 //
 
-#include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
 #include <common.h>
