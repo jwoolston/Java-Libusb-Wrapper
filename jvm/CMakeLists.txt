@@ -30,6 +30,11 @@ if(WIN32)
             ${JAVA_INCLUDE_PATH}/Win32
             ../library/libusb/msvc)
 endif(WIN32)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(includeDIRS
+            ${includeDIRS}
+            ${JAVA_INCLUDE_PATH}/linux)
+endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
 include_directories(${includeDIRS})
 
@@ -128,12 +133,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
                 ${POSIX_THREADS_SRC}
                 ../library/libusb/libusb/os/linux_netlink.c)
     endif(USE_UDEV)
+    set(OS_SRC ${OS_SRC} ../library/libusb/config.h.in)
 endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(OS_SRC
             ${DARWIN_USB_SRC}
             ${POSIX_POLL_SRC}
-            ${POSIX_THREADS_SRC})
+            ${POSIX_THREADS_SRC}
+            ../library/libusb/config.h.in)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -no-cpp-precomp")
 endif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 if(WIN32)

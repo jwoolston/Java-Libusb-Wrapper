@@ -7,3 +7,4 @@
 /captures
 .externalNativeBuild
 jvm/nativeBuild/
+jvm/linux/
