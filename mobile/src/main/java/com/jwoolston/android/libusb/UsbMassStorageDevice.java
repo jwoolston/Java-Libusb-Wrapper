@@ -18,10 +18,19 @@
 package com.jwoolston.android.libusb;
 
 import android.content.Context;
-import android.util.Log;
+
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriver;
 import com.jwoolston.android.libusb.msc_test_core.driver.BlockDeviceDriverFactory;
 import com.jwoolston.android.libusb.msc_test_core.usb.UsbCommunication;
+import com.jwoolston.libusb.LibusbError;
+import com.jwoolston.libusb.UsbConstants;
+import com.jwoolston.libusb.UsbDevice;
+import com.jwoolston.libusb.UsbDeviceConnection;
+import com.jwoolston.libusb.UsbEndpoint;
+import com.jwoolston.libusb.UsbInterface;
+import com.jwoolston.libusb.UsbManager;
+import com.toxicbakery.logging.Arbor;
+
 import java.io.IOException;
 
 /**
@@ -95,19 +104,19 @@ public class UsbMassStorageDevice {
     public static UsbMassStorageDevice getMassStorageDevice(Context context, UsbManager usbManager,
                                                             UsbDeviceConnection connection) {
         UsbDevice device = connection.getDevice();
-        Log.i(TAG, "found usb device: " + device);
+        Arbor.i("found usb device: %s", device);
 
         int interfaceCount = device.getInterfaceCount();
         for (int i = 0; i < interfaceCount; i++) {
             UsbInterface usbInterface = device.getInterface(i);
-            Log.i(TAG, "found usb interface: " + usbInterface);
+            Arbor.i("found usb interface: %s", usbInterface);
 
             // we currently only support SCSI transparent command set with
             // bulk transfers only!
             if (usbInterface.getInterfaceClass() != UsbConstants.USB_CLASS_MASS_STORAGE
                 || usbInterface.getInterfaceSubclass() != INTERFACE_SUBCLASS
                 || usbInterface.getInterfaceProtocol() != INTERFACE_PROTOCOL) {
-                Log.i(TAG, "device interface not suitable!");
+                Arbor.i("device interface not suitable!");
                 continue;
             }
 
@@ -115,14 +124,14 @@ public class UsbMassStorageDevice {
             // One IN and one OUT endpoint
             int endpointCount = usbInterface.getEndpointCount();
             if (endpointCount != 2) {
-                Log.w(TAG, "inteface endpoint count != 2");
+                Arbor.w("inteface endpoint count != 2");
             }
 
             UsbEndpoint outEndpoint = null;
             UsbEndpoint inEndpoint = null;
             for (int j = 0; j < endpointCount; j++) {
                 UsbEndpoint endpoint = usbInterface.getEndpoint(j);
-                Log.i(TAG, "found usb endpoint: " + endpoint);
+                Arbor.i("found usb endpoint: %s", endpoint);
                 if (endpoint.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
                     if (endpoint.getDirection() == UsbConstants.USB_DIR_OUT) {
                         outEndpoint = endpoint;
@@ -133,7 +142,7 @@ public class UsbMassStorageDevice {
             }
 
             if (outEndpoint == null || inEndpoint == null) {
-                Log.e(TAG, "Not all needed endpoints found!");
+                Arbor.e("Not all needed endpoints found!");
                 continue;
             }
             return new UsbMassStorageDevice(usbManager, connection, usbInterface, inEndpoint, outEndpoint);
@@ -166,7 +175,7 @@ public class UsbMassStorageDevice {
      * @see #init(boolean)
      */
     private void setupDevice(boolean async) throws IOException {
-        Log.d(TAG, "setup device");
+        Arbor.d("setup device");
         if (deviceConnection == null) {
             throw new IOException("deviceConnection is null!");
         }
@@ -179,7 +188,7 @@ public class UsbMassStorageDevice {
         UsbCommunication communication = new MSCCommunication(deviceConnection, outEndpoint, inEndpoint);
         byte[] b = new byte[1];
         deviceConnection.controlTransfer(0b10100001, 0b11111110, 0, usbInterface.getId(), b, 1, 5000);
-        Log.i(TAG, "MAX LUN " + (int) b[0]);
+        Arbor.i("MAX LUN " + (int) b[0]);
         blockDevice = BlockDeviceDriverFactory.createBlockDevice(communication, async);
         blockDevice.init();
     }
@@ -190,14 +199,14 @@ public class UsbMassStorageDevice {
      * method no further communication is possible.
      */
     public void close() {
-        Log.d(TAG, "close device");
+        Arbor.d("close device");
         if (deviceConnection == null) {
             return;
         }
 
         LibusbError release = deviceConnection.releaseInterface(usbInterface);
         if (release != LibusbError.LIBUSB_SUCCESS) {
-            Log.e(TAG, "could not release interface! " + release);
+            Arbor.e("could not release interface! " + release);
         }
         deviceConnection.close();
     }
@@ -210,6 +219,6 @@ public class UsbMassStorageDevice {
      * communication.
      */
     public UsbDevice getUsbDevice() {
-        return deviceConnection.getDevice();
+        return (UsbDevice) deviceConnection.getDevice();
     }
 }

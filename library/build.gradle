@@ -1,175 +1,101 @@
-apply plugin: 'com.android.library'
-apply plugin: 'org.jetbrains.dokka-android'
-apply plugin: 'jacoco'
-
-jacoco {
-    toolVersion = '0.8.0'
+plugins {
+    id 'java-library'
 }
 
-tasks.withType(Test) {
-    jacoco.includeNoLocationClasses = true
-}
-
-android {
-    compileSdkVersion Integer.parseInt(COMPILE_VERSION)
-    buildToolsVersion BUILD_TOOLS
-
-    lintOptions {
-        disable 'InvalidPackage'
-        abortOnError false
-    }
-
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion Integer.parseInt(TARGET_VERSION)
-        versionName version
-
-        resourcePrefix 'lusb_'
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
-        // The following argument makes the Android Test Orchestrator run its
-        // "pm clear" command after each test invocation. This command ensures
-        // that the app's state is completely cleared between tests.
-        testInstrumentationRunnerArguments clearPackageData: 'true'
-
-        externalNativeBuild {
-            cmake {
-                cppFlags ""
-                arguments '-DANDROID_ARM_NEON=TRUE'
-            }
-        }
-    }
-
-    buildTypes {
-        debug {
-            testCoverageEnabled true
-        }
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    testOptions {
-        execution 'ANDROID_TEST_ORCHESTRATOR'
-        animationsDisabled true
-
-        /*unitTests {
-            includeAndroidResources = true
-        }*/
-    }
-
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
-}
+sourceCompatibility = "7"
+targetCompatibility = "7"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    // Logging
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation("com.ToxicBakery.logging:arbor-jvm:$arbor_version")
 
-    testImplementation 'junit:junit:4.12'
-
-    androidTestUtil 'com.android.support.test:orchestrator:1.0.1'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test:rules:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    androidTestImplementation 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
-
-    androidTestImplementation project(':msc_test_core')
+    // Utils
+    implementation 'org.jetbrains:annotations:16.0.1'
 }
 
-dokka {
-    noStdlibLink = false
-    includeNonPublic = false
-    skipEmptyPackages = true
-    outputFormat = 'html'
-    outputDirectory = "$buildDir/javadoc"
-}
-
-afterEvaluate { project ->
-    task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
-        outputFormat = 'javadoc'
-        outputDirectory = "$buildDir/javadoc"
-        inputs.dir 'src/main/java'
-    }
-
-    task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
-        classifier = 'javadoc'
-        from "$buildDir/javadoc"
-    }
-
-    task sourcesJar(type: Jar) {
-        classifier = 'sources'
-        from android.sourceSets.main.java.srcDirs
-    }
-
-    artifacts {
-        archives sourcesJar
-        archives javadocJar
-    }
-}
-
-task jacocoUnitTestReport(type: JacocoReport, group: 'verification',
-        dependsOn: ['testDebugUnitTest']) {
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
-    def debugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
-    def mainSrc = "$project.projectDir/src/main/java"
-
-    sourceDirectories = files([mainSrc])
-    classDirectories = files([debugTree])
-    executionData = fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
-    ])
-}
-
-task jacocoFullTestReport(type: JacocoReport, group: 'verification',
-        dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
-    def debugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
-    def mainSrc = "$project.projectDir/src/main/java"
-
-    sourceDirectories = files([mainSrc])
-    classDirectories = files([debugTree])
-    executionData = fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
-    ])
-}
-
-task copyAndroidCoverage(type: Copy) {
-    /*afterEvaluate {
-        dependsOn jacocoFullTestReport
-    }*/
-    from 'build/reports/jacoco/jacocoFullTestReport/jacocoFullTestReport.xml'
-    into './'
-    rename { String fileName ->
-        fileName = "integration.xml"
-    }
-}
-
-task prepareForCommit(dependsOn: [copyAndroidCoverage]) {
-
-}
-
-apply from: "${rootDir}/publish.gradle"
+//dokka {
+//    noStdlibLink = false
+//    includeNonPublic = false
+//    skipEmptyPackages = true
+//    outputFormat = 'html'
+//    outputDirectory = "$buildDir/javadoc"
+//}
+//
+//afterEvaluate { project ->
+//    task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
+//        outputFormat = 'javadoc'
+//        outputDirectory = "$buildDir/javadoc"
+//        inputs.dir 'src/main/java'
+//    }
+//
+//    task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
+//        classifier = 'javadoc'
+//        from "$buildDir/javadoc"
+//    }
+//
+//    task sourcesJar(type: Jar) {
+//        classifier = 'sources'
+//        from android.sourceSets.main.java.srcDirs
+//    }
+//
+//    artifacts {
+//        archives sourcesJar
+//        archives javadocJar
+//    }
+//}
+//
+//task jacocoUnitTestReport(type: JacocoReport, group: 'verification',
+//        dependsOn: ['testDebugUnitTest']) {
+//
+//    reports {
+//        xml.enabled = true
+//        html.enabled = true
+//    }
+//
+//    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+//    def debugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
+//    def mainSrc = "$project.projectDir/src/main/java"
+//
+//    sourceDirectories = files([mainSrc])
+//    classDirectories = files([debugTree])
+//    executionData = fileTree(dir: project.buildDir, includes: [
+//            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
+//    ])
+//}
+//
+//task jacocoFullTestReport(type: JacocoReport, group: 'verification',
+//        dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
+//
+//    reports {
+//        xml.enabled = true
+//        html.enabled = true
+//    }
+//
+//    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+//    def debugTree = fileTree(dir: "$project.buildDir/intermediates/classes/debug", excludes: fileFilter)
+//    def mainSrc = "$project.projectDir/src/main/java"
+//
+//    sourceDirectories = files([mainSrc])
+//    classDirectories = files([debugTree])
+//    executionData = fileTree(dir: project.buildDir, includes: [
+//            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
+//    ])
+//}
+//
+//task copyAndroidCoverage(type: Copy) {
+//    /*afterEvaluate {
+//        dependsOn jacocoFullTestReport
+//    }*/
+//    from 'build/reports/jacoco/jacocoFullTestReport/jacocoFullTestReport.xml'
+//    into './'
+//    rename { String fileName ->
+//        fileName = "integration.xml"
+//    }
+//}
+//
+//task prepareForCommit(dependsOn: [copyAndroidCoverage]) {
+//
+//}
