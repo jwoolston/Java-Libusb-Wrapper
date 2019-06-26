@@ -21,10 +21,30 @@ repositories {
     google()
 }
 
+static String getSnapshotUrl() {
+    return System.getenv('SNAPSHOT_URL')
+}
+
+static String getReleaseUrl() {
+    return System.getenv('RELEASE_URL')
+}
+
+static String getRepoUsername() {
+    return System.getenv('REPO_USERNAME')
+}
+
+static String getRepoPassword() {
+    return System.getenv('REPO_PASSWORD')
+}
+
 allprojects {
-    String tagName = System.getenv('CIRCLE_TAG')
+    String jenkinsHome = System.getenv('JENKINS_HOME')
+    boolean isJenkins = jenkinsHome != null && !jenkinsHome.isEmpty()
+    
+    String tagName = isJenkins ? null : System.getenv('CIRCLE_TAG')
     boolean isTag = tagName != null && !tagName.isEmpty()
-    String buildNumber = System.getenv('CIRCLE_BUILD_NUM') ?: "0"
+    
+    String buildNumber = isJenkins ? System.getenv('BUILD_NUMBER') : System.getenv('CIRCLE_BUILD_NUM') ?: "0"
 
     group 'com.jwoolston.libusb'
     version "$VERSION_NAME.${buildNumber}" + (isTag ? "" : "-SNAPSHOT")
