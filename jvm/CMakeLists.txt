@@ -134,14 +134,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
                 ${POSIX_THREADS_SRC}
                 ../library/libusb/libusb/os/linux_netlink.c)
     endif(USE_UDEV)
-    set(OS_SRC ${OS_SRC} ../library/libusb/config.h.in)
 endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(OS_SRC
             ${DARWIN_USB_SRC}
             ${POSIX_POLL_SRC}
-            ${POSIX_THREADS_SRC}
-            ../library/libusb/config.h.in)
+            ${POSIX_THREADS_SRC})
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -no-cpp-precomp")
 endif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 if(WIN32)
