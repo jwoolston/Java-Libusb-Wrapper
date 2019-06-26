@@ -33,7 +33,8 @@ endif(WIN32)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(includeDIRS
             ${includeDIRS}
-            ${JAVA_INCLUDE_PATH}/linux)
+            ${JAVA_INCLUDE_PATH}/linux
+            ../library/libusb)
 endif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
 include_directories(${includeDIRS})
