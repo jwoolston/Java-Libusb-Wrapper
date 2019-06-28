@@ -1,3 +1,8 @@
+plugins {
+    id 'maven-publish'
+    id 'signing'
+}
+
 apply plugin: 'java-library'
 
 dependencies {
@@ -11,3 +16,51 @@ dependencies {
 
 sourceCompatibility = "8"
 targetCompatibility = "8"
+
+publishing {
+    publications {
+        all(MavenPublication) { publication ->
+            artifact jar
+            pom {
+                name = POM_NAME
+                description = POM_DESCRIPTION
+                url = POM_URL
+                scm {
+                    url = POM_SCM_URL
+                    connection = POM_SCM_CONNECTION
+                    developerConnection = POM_SCM_DEV_CONNECTION
+                }
+                licenses {
+                    license {
+                        name = POM_LICENCE_NAME
+                        url = POM_LICENCE_URL
+                        distribution = POM_LICENCE_DIST
+                    }
+                }
+                developers {
+                    developer {
+                        id = POM_DEVELOPER_ID
+                        name = POM_DEVELOPER_NAME
+                        email = POM_DEVELOPER_EMAIL
+                        organization = POM_DEVELOPER_ORGANIZATION
+                        organizationUrl = POM_DEVELOPER_ORGANIZATION_URL
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url !version.contains("SNAPSHOT") ? getReleaseUrl() : getSnapshotUrl()
+            credentials {
+                username = getRepoUsername()
+                password = getRepoPassword()
+            }
+        }
+    }
+}
+
+signing {
+    required false
+    sign publishing.publications
+}

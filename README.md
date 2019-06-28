@@ -3,11 +3,11 @@ Java wrapper for libusb library following Android USB Host API
 
 ## Status
 ### Master
-[![CircleCI](https://circleci.com/gh/jwoolston/Android-Libusb-Wrapper/tree/master.svg?style=svg)](https://circleci.com/gh/jwoolston/Android-Libusb-Wrapper/tree/master)
-[![codecov](https://codecov.io/gh/jwoolston/Android-Libusb-Wrapper/branch/master/graph/badge.svg)](https://codecov.io/gh/jwoolston/Android-Libusb-Wrapper)
+[![CircleCI](https://circleci.com/gh/jwoolston/Java-Libusb-Wrapper/tree/master.svg?style=svg)](https://circleci.com/gh/jwoolston/Java-Libusb-Wrapper/tree/master)
+[![codecov](https://codecov.io/gh/jwoolston/Java-Libusb-Wrapper/branch/master/graph/badge.svg)](https://codecov.io/gh/jwoolston/Java-Libusb-Wrapper)
 ### Development
-[![CircleCI](https://circleci.com/gh/jwoolston/Android-Libusb-Wrapper/tree/development.svg?style=svg)](https://circleci.com/gh/jwoolston/Android-Libusb-Wrapper/tree/development)
-[![codecov](https://codecov.io/gh/jwoolston/Android-Libusb-Wrapper/branch/development/graph/badge.svg)](https://codecov.io/gh/jwoolston/Android-Libusb-Wrapper)
+[![CircleCI](https://circleci.com/gh/jwoolston/Java-Libusb-Wrapper/tree/development.svg?style=svg)](https://circleci.com/gh/jwoolston/Java-Libusb-Wrapper/tree/development)
+[![codecov](https://codecov.io/gh/jwoolston/Java-Libusb-Wrapper/branch/development/graph/badge.svg)](https://codecov.io/gh/jwoolston/Java-Libusb-Wrapper)
 
 ## Overview
 This is wrapper of the [libusb](https://github.com/libusb/libusb) library for Android which provides a pure Java interface. The goal of this project is to avoid the shortcomings of the Android USB Host framework which notably are:

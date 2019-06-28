@@ -46,10 +46,12 @@ public class BaseUsbManager {
 
     private volatile AsyncUSBThread asyncUsbThread;
 
+    private NativeDeviceList nativeDeviceList;
+
     @Nullable
     private native ByteBuffer nativeInitialize();
 
-    private native void nativeSetLoggingLevel(@NotNull ByteBuffer nativeObject, int level);
+    private native void nativeSetLoggingLevel(@NotNull ByteBuffer nativeContext, int level);
 
     private native void nativeDestroy(@NotNull ByteBuffer context);
 
@@ -84,7 +86,7 @@ public class BaseUsbManager {
      *
      * @return {@link HashMap} containing all connected USB devices.
      */
-    public HashMap<String, BaseUsbDevice> getDeviceList() {
+    public HashMap<String, BaseUsbDevice> getConnectedDeviceList() {
         synchronized (cacheLock) {
             final HashMap<String, BaseUsbDevice> map = new HashMap<>();
             for (Entry<String, BaseUsbDevice> entry : localDeviceCache.entrySet()) {

@@ -77,23 +77,15 @@ public class UsbDevice extends BaseUsbDevice implements Parcelable {
 
     private UsbDevice(@NotNull android.hardware.usb.UsbDeviceConnection connection,
                           @NotNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
-        Preconditions.checkNotNull(nativeObject, "BaseUsbDevice initialization failed.");
+        Preconditions.checkNotNull(nativeObject, "UsbDevice initialization failed.");
         this.nativeObject = nativeObject;
         this.device = device;
         name = device.getDeviceName();
-        vendorId = device.getVendorId();
-        productId = device.getProductId();
-        deviceClass = device.getDeviceClass();
-        subclass = device.getDeviceSubclass();
-        protocol = device.getDeviceProtocol();
 
         LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
-        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
-        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
-        version = nativeGetDeviceVersion(descriptor.getNativeObject());
-        serialNumber = connection.getSerial();
-        speed = LibusbSpeed.fromNative(nativeGetDeviceSpeed(nativeObject, descriptor.getNativeObject()));
+        initFromDescriptor(descriptor);
 
+        serialNumber = connection.getSerial();
         fileDescriptor = connection.getFileDescriptor();
     }
 

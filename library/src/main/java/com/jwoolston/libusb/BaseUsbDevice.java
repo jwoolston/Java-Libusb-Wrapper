@@ -285,6 +285,7 @@ public abstract class BaseUsbDevice{
      */
     @NotNull
     public ByteBuffer getNativeObject() {
+        //TODO: Validity check for native
         return nativeObject;
     }
 
@@ -310,6 +311,22 @@ public abstract class BaseUsbDevice{
      */
     void setConfigurations(@NotNull BaseUsbConfiguration[] configuration) {
         configurations = Preconditions.checkArrayElementsNotNull(configuration, "configuration");
+    }
+
+    protected void initFromDescriptor(@NotNull LibUsbDeviceDescriptor descriptor) {
+        // This involves a lot of cross JNI calls but is safer across multiple platforms than byte
+        // buffer access so we don't have to deal with padding/alignment
+        vendorId = descriptor.getVendorId();
+        productId = descriptor.getProductId();
+        deviceClass = descriptor.getDeviceClass();
+        subclass = descriptor.getDeviceSubclass();
+        protocol = descriptor.getDeviceProtocol();
+
+        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
+        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
+        version = nativeGetDeviceVersion(descriptor.getNativeObject());
+
+        speed = LibusbSpeed.fromNative(nativeGetDeviceSpeed(nativeObject, descriptor.getNativeObject()));
     }
 
     /**
@@ -349,6 +366,18 @@ public abstract class BaseUsbDevice{
      * @return {@link String} The device manufacturer name.
      */
     native String nativeGetManufacturerString(@NotNull ByteBuffer device, @NotNull ByteBuffer descriptor);
+
+    /**
+     * Retrieves the serial number string from the device.
+     *
+     * @param device     {@link ByteBuffer} pointing to a {@code libusb_device_handle} instance in native. Provided
+     *                   by {@link BaseUsbDevice#getNativeObject()}.
+     * @param descriptor {@link ByteBuffer} pointing to a {@code libusb_device_descriptor} instanace in native.
+     *                   Provided by {@link LibUsbDeviceDescriptor#getNativeObject()}.
+     *
+     * @return {@link String} The device serial number string.
+     */
+    native String nativeGetSerialString(@NotNull ByteBuffer device, @NotNull ByteBuffer descriptor);
 
     /**
      * Retrieves the product name string from the device.

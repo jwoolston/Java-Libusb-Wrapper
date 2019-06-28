@@ -56,6 +56,21 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetManufacturerString(JNIEnv *env,
     return retval;
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetSerialString(JNIEnv *env, jobject instance, jobject device,
+                                                                    jobject descriptor) {
+    struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
+                                                                                                               device);
+    struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
+            (*env)->GetDirectBufferAddress(env, descriptor);
+
+    size_t length = 50 * sizeof(unsigned char);
+    unsigned char *serial = malloc(length);
+    libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iSerialNumber, serial, (int) length);
+    jstring retval = (*env)->NewStringUTF(env, (const char *) serial);
+    free(serial);
+    return retval;
+}
 
 JNIEXPORT jstring JNICALL
 Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetProductNameString(JNIEnv *env, jobject instance, jobject device,
