@@ -18,13 +18,13 @@ public class LibUsbDeviceDescriptor {
 
     @NotNull
     static LibUsbDeviceDescriptor getDeviceDescriptor(@NotNull BaseUsbDevice device) {
-        return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptor(device.getNativeObject()));
+        return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptorFromHandle(device.getNativeObject()));
     }
 
-    @Nullable
-    private static native ByteBuffer nativeGetDeviceDescriptor(@NotNull ByteBuffer device);
-
-    private static native void nativeDestroy(@NotNull ByteBuffer descriptor);
+    @NotNull
+    static LibUsbDeviceDescriptor getDeviceDescriptor(long nativePointer) {
+        return new LibUsbDeviceDescriptor(nativeGetDeviceDescriptorFromDevice(nativePointer));
+    }
 
     private LibUsbDeviceDescriptor(ByteBuffer nativeObject) {
         Preconditions.checkNotNull(nativeObject, "LibUsbDeviceDescriptor Initialization failed.");
@@ -52,4 +52,42 @@ public class LibUsbDeviceDescriptor {
         }
         super.finalize();
     }
+
+    public int getVendorId() {
+        return nativeGetVendorId(getNativeObject());
+    }
+
+    public int getProductId() {
+        return nativeGetProductId(getNativeObject());
+    }
+
+    public int getDeviceClass() {
+        return nativeGetDeviceClass(getNativeObject());
+    }
+
+    public int getDeviceSubclass() {
+        return nativeGetDeviceSubclass(getNativeObject());
+    }
+
+    public int getDeviceProtocol() {
+        return nativeGetDeviceProtocol(getNativeObject());
+    }
+
+    @Nullable
+    private static native ByteBuffer nativeGetDeviceDescriptorFromHandle(@NotNull ByteBuffer device);
+
+    @Nullable
+    private static native ByteBuffer nativeGetDeviceDescriptorFromDevice(long nativePointer);
+
+    private static native void nativeDestroy(@NotNull ByteBuffer descriptor);
+
+    private static native int nativeGetVendorId(@NotNull ByteBuffer descriptor);
+
+    private static native int nativeGetProductId(@NotNull ByteBuffer descriptor);
+
+    private static native int nativeGetDeviceClass(@NotNull ByteBuffer descriptor);
+
+    private static native int nativeGetDeviceSubclass(@NotNull ByteBuffer descriptor);
+
+    private static native int nativeGetDeviceProtocol(@NotNull ByteBuffer descriptor);
 }

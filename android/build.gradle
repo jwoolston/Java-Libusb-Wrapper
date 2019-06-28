@@ -70,4 +70,4 @@ dependencies {
     androidTestImplementation project(':msc_test_core')
 }
 
-apply from: "${rootDir}/publish.gradle"
+//apply from: "${rootDir}/publish.gradle"

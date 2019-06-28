@@ -1,31 +1,34 @@
 package com.jwoolston.libusb;
 
+import com.jwoolston.libusb.util.Preconditions;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.nio.ByteBuffer;
 
 public class UsbDevice extends BaseUsbDevice {
 
     /*private UsbDevice(@NotNull android.hardware.usb.UsbDeviceConnection connection,
                           @NotNull android.hardware.usb.UsbDevice device, @Nullable ByteBuffer nativeObject) {
-        Preconditions.checkNotNull(nativeObject, "BaseUsbDevice initialization failed.");
-        this.nativeObject = nativeObject;
-        this.device = device;
-        name = device.getDeviceName();
-        vendorId = device.getVendorId();
-        productId = device.getProductId();
-        deviceClass = device.getDeviceClass();
-        subclass = device.getDeviceSubclass();
-        protocol = device.getDeviceProtocol();
 
-        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
-        manufacturerName = nativeGetManufacturerString(nativeObject, descriptor.getNativeObject());
-        productName = nativeGetProductNameString(nativeObject, descriptor.getNativeObject());
-        version = nativeGetDeviceVersion(descriptor.getNativeObject());
+
         serialNumber = connection.getSerial();
-        speed = LibusbSpeed.fromNative(nativeGetDeviceSpeed(nativeObject, descriptor.getNativeObject()));
+
 
         fileDescriptor = connection.getFileDescriptor();
     }*/
+
+    private UsbDevice(long nativePointer) {
+        Preconditions.checkArgument(nativePointer != 0, "BaseUsbDevice initialization failed.");
+        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(nativePointer);
+        initFromDescriptor(descriptor);
+    }
+
+    private UsbDevice(@Nullable ByteBuffer nativeObject) {
+        LibUsbDeviceDescriptor descriptor = LibUsbDeviceDescriptor.getDeviceDescriptor(this);
+        initFromDescriptor(descriptor);
+    }
 
     @Override
     UsbConfiguration createConfiguration(int id, @Nullable String name, int attributes, int maxPower) {

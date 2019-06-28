@@ -42,6 +42,7 @@ add_library(
     # Provides a relative path to your source file(s).
         ../library/jni/async_transfer.c
         ../library/jni/async_usb_thread.c
+        ../library/jni/device_list.c
         ../library/jni/common.h
         ../library/jni/isochronous_async_transfer.c
         ../library/jni/libusb_device_descriptor.c
