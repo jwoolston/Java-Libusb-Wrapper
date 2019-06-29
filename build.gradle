@@ -37,6 +37,13 @@ static String getRepoPassword() {
     return System.getenv('REPO_PASSWORD')
 }
 
+static boolean isCi() {
+    String jenkinsHome = System.getenv('JENKINS_HOME')
+    boolean isJenkins = jenkinsHome != null && !jenkinsHome.isEmpty()
+    boolean isCircle = System.getenv('CIRCLECI') ? true : false
+    return (isJenkins || isCircle)
+}
+
 allprojects {
     String jenkinsHome = System.getenv('JENKINS_HOME')
     boolean isJenkins = jenkinsHome != null && !jenkinsHome.isEmpty()

@@ -61,6 +61,6 @@ publishing {
 }
 
 signing {
-    required false
+    required isCi()
     sign publishing.publications
 }
