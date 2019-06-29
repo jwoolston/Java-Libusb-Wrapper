@@ -27,7 +27,7 @@ jobs:
               ls
               echo "signing.keyId=${SIGNING_KEY}" >> "gradle.properties"
               echo "signing.password=${SIGNING_PASSWORD}" >> "gradle.properties"
-              echo "signing.secretKeyRingFile=secret.gpg" >> "gradle.properties"
+              echo "signing.secretKeyRingFile=/root/repo/secret.gpg" >> "gradle.properties"
               ./gradlew build publish
             else
               ./gradlew build
