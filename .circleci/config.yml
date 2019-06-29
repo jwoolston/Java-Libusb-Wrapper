@@ -21,7 +21,8 @@ jobs:
       - run:
           name: Execute Gradle
           command: |
-            echo "org.gradle.daemon=false" >> gradle.properties 
+            echo "org.gradle.daemon=false" >> gradle.properties
+            gpg --version
             if [ "master" = "$CIRCLE_BRANCH" ] || [ ! -z "$CIRCLE_TAG" ]; then
               echo "signing.keyId=${SIGNING_KEY}" >> "gradle.properties"
               echo "signing.password=${SIGNING_PASSWORD}" >> "gradle.properties"
