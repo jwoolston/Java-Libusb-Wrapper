@@ -8,6 +8,9 @@
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #define  LOG_TAG    "UsbDevice-Native"
 
+#define STR_ALLOC_LENGTH 50
+#define SIGN_MASK 0xFF
+
 JNIEXPORT jstring JNICALL
 Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetStringDescriptor(JNIEnv *env, jclass type, jobject device,
                                                                       jint index) {
@@ -16,9 +19,9 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetStringDescriptor(JNIEnv *env, j
     }
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-    size_t length = 50 * sizeof(unsigned char);
+    size_t length = STR_ALLOC_LENGTH * sizeof(unsigned char);
     unsigned char *name = malloc(length);
-    libusb_get_string_descriptor_ascii(deviceHandle, (uint8_t) (0xFF & index), name, (int) length);
+    libusb_get_string_descriptor_ascii(deviceHandle, (uint8_t) (SIGN_MASK & index), name, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) name);
     free(name);
     return retval;
@@ -48,7 +51,7 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetManufacturerString(JNIEnv *env,
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 
-    size_t length = 50 * sizeof(unsigned char);
+    size_t length = STR_ALLOC_LENGTH * sizeof(unsigned char);
     unsigned char *name = malloc(length);
     libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iManufacturer, name, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) name);
@@ -64,7 +67,7 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetSerialString(JNIEnv *env, jobje
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 
-    size_t length = 50 * sizeof(unsigned char);
+    size_t length = STR_ALLOC_LENGTH * sizeof(unsigned char);
     unsigned char *serial = malloc(length);
     libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iSerialNumber, serial, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) serial);
@@ -80,7 +83,7 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetProductNameString(JNIEnv *env, 
     struct libusb_device_descriptor *deviceDescriptor = (struct libusb_device_descriptor *)
             (*env)->GetDirectBufferAddress(env, descriptor);
 
-    size_t length = 50 * sizeof(unsigned char);
+    size_t length = STR_ALLOC_LENGTH * sizeof(unsigned char);
     unsigned char *name = malloc(length);
     libusb_get_string_descriptor_ascii(deviceHandle, deviceDescriptor->iProduct, name, (int) length);
     jstring retval = (*env)->NewStringUTF(env, (const char *) name);
@@ -95,7 +98,7 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetDeviceVersion(JNIEnv *env, jobj
     uint16_t bcdDevice = deviceDescriptor->bcdDevice;
     size_t length = 4 * sizeof(unsigned char);
     char *version = malloc(length);
-    snprintf(version, length, "%i.%i", 0xFF & (bcdDevice >> 8), 0xFF & bcdDevice);
+    snprintf(version, length, "%i.%i", SIGN_MASK & (bcdDevice >> 8), SIGN_MASK & bcdDevice);
     jstring retval = (*env)->NewStringUTF(env, (const char *) version);
     free(version);
     return retval;
@@ -107,7 +110,7 @@ Java_com_jwoolston_libusb_BaseUsbDevice_nativeGetDeviceSpeed(JNIEnv *env, jobjec
 
     struct libusb_device_handle *deviceHandle = (struct libusb_device_handle *) (*env)->GetDirectBufferAddress(env,
                                                                                                                device);
-    return libusb_get_device_speed(deviceHandle);
+    return libusb_get_device_speed(deviceHandle->dev);
 }
 
 JNIEXPORT jint JNICALL

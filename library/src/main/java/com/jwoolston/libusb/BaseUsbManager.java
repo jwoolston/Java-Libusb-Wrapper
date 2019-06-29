@@ -46,7 +46,7 @@ public class BaseUsbManager {
 
     private volatile AsyncUSBThread asyncUsbThread;
 
-    private NativeDeviceList nativeDeviceList;
+    private DeviceList nativeDeviceList;
 
     @Nullable
     private native ByteBuffer nativeInitialize();

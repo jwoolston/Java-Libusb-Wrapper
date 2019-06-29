@@ -6,11 +6,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-class NativeDeviceList {
+class DeviceList {
 
     static {
         if (!nativeInitialize()) {
-            throw new RuntimeException("Failed to initialize native layer for NativeDeviceList.");
+            throw new RuntimeException("Failed to initialize native layer for DeviceList.");
         }
     }
 
@@ -19,11 +19,11 @@ class NativeDeviceList {
     private List<BaseUsbDevice> devices = new ArrayList<>();
 
     @NotNull
-    public static NativeDeviceList fromNativeObject(long nativeObject) {
-        return new NativeDeviceList(nativeObject);
+    public static DeviceList fromNativeObject(long nativeObject) {
+        return new DeviceList(nativeObject);
     }
 
-    private NativeDeviceList(long nativeObject) {
+    private DeviceList(long nativeObject) {
         this.nativeObject = nativeObject;
         nativePopulateDeviceList(nativeObject, devices);
     }

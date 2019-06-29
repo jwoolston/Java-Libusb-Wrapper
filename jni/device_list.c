@@ -10,7 +10,7 @@ jobject usbDeviceClass;
 jmethodID listAdd;
 jmethodID usbDeviceConstructor;
 
-JNIEXPORT jlong JNICALL
+JNIEXPORT jboolean JNICALL
 Java_com_jwoolston_libusb_DeviceList_nativeInitialize(JNIEnv *env, jclass type) {
     // Find the classes
     jclass localClass = (*env)->FindClass(env, "java/util/List");
@@ -21,6 +21,10 @@ Java_com_jwoolston_libusb_DeviceList_nativeInitialize(JNIEnv *env, jclass type) 
     // Find the methods
     listAdd = (*env)->GetMethodID(env, listClass, "add", "(Ljava/lang/Object;)Z");
     usbDeviceConstructor = (*env)->GetMethodID(env, usbDeviceClass, "<init>", "(J)V");
+
+    //TODO: JNI Error checking
+
+    return JNI_TRUE;
 }
 
 JNIEXPORT jlong JNICALL
@@ -36,7 +40,7 @@ Java_com_jwoolston_libusb_DeviceList_nativeGetDeviceList(JNIEnv *env, jclass typ
         LOGE("Failed to retrieve USB device list. Error: %i", count);
         return NULL;
     }
-    return (void *) list;
+    return (jlong) (void *) list;
 }
 
 JNIEXPORT void JNICALL
