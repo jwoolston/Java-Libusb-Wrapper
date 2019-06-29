@@ -26,7 +26,8 @@ jobs:
               echo "signing.keyId=${SIGNING_KEY}" >> "gradle.properties"
               echo "signing.password=${SIGNING_PASSWORD}" >> "gradle.properties"
               echo "signing.secretKeyRingFile=../secret.gpg" >> "gradle.properties"
-              openssl aes-256-cbc -d -in secret.gpg.enc -out secret.gpg -k $ENC_FILE_KEY
+              openssl version
+              openssl aes-256-cbc -md sha256 -d -in secret.gpg.enc -out secret.gpg -k "$ENC_FILE_KEY"
               ./gradlew build uploadArchives
             else
               ./gradlew build
