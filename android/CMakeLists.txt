@@ -16,7 +16,7 @@ include_directories(
         ../library/libusb/android
         ../library/libusb/libusb
         ../library/libusb/libusb/os
-        ../library/jni)
+        ../jni)
 
 # Defines the source code for the library
 set(libusb_SRCS
@@ -40,19 +40,19 @@ add_library(
     SHARED
 
     # Provides a relative path to your source file(s).
-        ../library/jni/async_transfer.c
-        ../library/jni/async_usb_thread.c
-        ../library/jni/device_list.c
-        ../library/jni/common.h
-        ../library/jni/isochronous_async_transfer.c
-        ../library/jni/libusb_device_descriptor.c
-        ../library/jni/libusb_error_enum.c
-        ../library/jni/logging.c
-        ../library/jni/usb_configuration.c
-        ../library/jni/usb_device.c
-        ../library/jni/usb_device_connection.c
-        ../library/jni/usb_interface.c
-        ../library/jni/usb_manager.c
+        ../jni/async_transfer.c
+        ../jni/async_usb_thread.c
+        ../jni/device_list.c
+        ../jni/common.h
+        ../jni/isochronous_async_transfer.c
+        ../jni/libusb_device_descriptor.c
+        ../jni/libusb_error_enum.c
+        ../jni/logging.c
+        ../jni/usb_configuration.c
+        ../jni/usb_device.c
+        ../jni/usb_device_connection.c
+        ../jni/usb_interface.c
+        ../jni/usb_manager.c
     ${libusb_SRCS}
 )
 
