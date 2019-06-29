@@ -24,6 +24,7 @@ jobs:
             echo "org.gradle.daemon=false" >> gradle.properties 
             if [ "master" = "$CIRCLE_BRANCH" ] || [ ! -z "$CIRCLE_TAG" ]; then
               echo $KEYSTORE >> "secret.gpg"
+              ls
               echo "signing.keyId=${SIGNING_KEY}" >> "gradle.properties"
               echo "signing.password=${SIGNING_PASSWORD}" >> "gradle.properties"
               echo "signing.secretKeyRingFile=secret.gpg" >> "gradle.properties"
