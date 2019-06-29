@@ -23,11 +23,10 @@ jobs:
           command: |
             echo "org.gradle.daemon=false" >> gradle.properties 
             if [ "master" = "$CIRCLE_BRANCH" ] || [ ! -z "$CIRCLE_TAG" ]; then
+              echo $KEYSTORE >> "secret.gpg"
               echo "signing.keyId=${SIGNING_KEY}" >> "gradle.properties"
               echo "signing.password=${SIGNING_PASSWORD}" >> "gradle.properties"
               echo "signing.secretKeyRingFile=../secret.gpg" >> "gradle.properties"
-              openssl version
-              openssl aes-256-cbc -md sha256 -d -in secret.gpg.enc -out secret.gpg -pass pass:$ENC_FILE_KEY
               ./gradlew build uploadArchives
             else
               ./gradlew build
