@@ -8,3 +8,4 @@
 .externalNativeBuild
 jvm/nativeBuild/
 jvm/linux/
+secret.gpg
